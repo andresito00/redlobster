@@ -1,0 +1,5 @@
+BasedOnStyle: Google
+SortIncludes: false
+BreakBeforeBraces: Linux
+IndentWidth: 2
+ReflowComments: false

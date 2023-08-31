@@ -1,0 +1,9 @@
+*CMakeFiles*
+*Makefile*
+CMakeCache.txt
+.DS_Store
+build/
+__pycache__
+*.egg-info
+*.cmake
+.vscode
