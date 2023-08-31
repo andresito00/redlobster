@@ -134,8 +134,6 @@ F 10008 IBM 3 102.00000
 #include <iostream>
 #include "simple_cross.h"
 
-using namespace scross;
-
 // Check for unicode!!!!!!
 int main(int argc, char *argv[])
 {

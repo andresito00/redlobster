@@ -7,8 +7,6 @@
 #include <order_book.h>
 #include <order.h>
 
-namespace scross
-{
 using results_t = std::list<std::string>;
 
 class SimpleCross
@@ -17,6 +15,7 @@ class SimpleCross
   results_t action(const std::string& line);
 
  private:
+  // Consider hashing on symbol and process per symbol group...
   order::BookMap books_;
 };
 
@@ -39,7 +38,5 @@ struct Action {
     return {};
   }
 };
-
-};  // namespace scross
 
 #endif  // SIMPLE_CROSS_H_

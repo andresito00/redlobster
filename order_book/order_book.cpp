@@ -9,94 +9,74 @@ namespace order
 {
 
 // TODO: Further restrict this template type
-template <typename T, typename U>
-static fifo_idx_t update_book(
-    T& search_level, U& book_level,
-    std::function<bool(double, double)> meets_price_req, Order& order,
-    OrderResult& result)
+template <typename T, typename U, typename Compare>
+static fifo_idx_t update_book(T& search_level, U& book_level, Order& order,
+                              OrderResult& result)
 {
-  // for every level starting at get_start, search for possible matches
+  auto meets_price_req = [](price_t level_price, price_t order_price) -> bool {
+    return Compare()(level_price, order_price);
+  };
   auto search_it = search_level.begin();
   auto remaining_qty = order.qty;
   while (search_it != search_level.end() && remaining_qty > 0) {
-    auto& [price, order_queue] = *search_it;
+    auto& [price, level] = *search_it;
     if (!meets_price_req(price, order.price)) {
       // all following prices will exceed/fall below the req
       break;
     }
 
-    while (!order_queue.fifo.empty() && remaining_qty > 0) {
+    while (!level.empty() && remaining_qty > 0) {
       // req_quantity can never be 0 here
-      auto& candidate = order_queue.fifo.front();
-      if (candidate.qty >= remaining_qty) {
-        candidate.qty -= remaining_qty;
+      auto& candidate = level.fifo.front();
+      if (candidate.qty > 0) {
+        auto min_fill = std::min(candidate.qty, remaining_qty);
+        auto inbound_filled = order;
+        auto outbound_filled = candidate;
+        inbound_filled.qty = min_fill;
+        inbound_filled.price = price;  // fill price might change for inbound
+        outbound_filled.qty = min_fill;
 
-        auto inbound_filled = Order(order);
-        inbound_filled.qty = remaining_qty;
-        inbound_filled.price = price;
-        result.orders.push_back(inbound_filled);
-
-        auto outbound_filled = Order(candidate);
-        outbound_filled.qty = remaining_qty;
-        result.orders.push_back(outbound_filled);
-
-        remaining_qty = 0;
-
-      } else {
-        remaining_qty -= candidate.qty;
-        // report filled orders
-        if (candidate.qty > 0) {
-          auto inbound_filled = Order(order);
-          inbound_filled.qty = candidate.qty;
-          inbound_filled.price = price;
-          result.orders.push_back(inbound_filled);
-
-          auto outbound_filled = Order(candidate);
-          result.orders.push_back(outbound_filled);
-
-          candidate.qty = 0;
-        }
+        result.orders.emplace_back(inbound_filled);
+        result.orders.emplace_back(outbound_filled);
+        candidate.qty -= min_fill;
+        remaining_qty -= min_fill;
+        level.total -= min_fill;
       }
 
       if (candidate.qty == 0) {
         // candidate order has been exhausted, or was previously cancelled
-        order_queue.fifo.pop_front();
-        if (order_queue.fifo.empty()) {
-          // Erase invalidates the current price level
-          // and resets iterators.
-          search_level.erase(search_it->first);
-          search_it = search_level.begin();
-          break;
-        }
+        level.pop_front();
       }
+    }
+
+    if (level.empty()) {
+      // Erase invalidates the current price level
+      // and resets iterators.
+      search_level.erase(search_it->first);
+      search_it = search_level.begin();
     }
   }
 
   if (remaining_qty) {
     order.qty = remaining_qty;
-    // TODO: Currently considering using a shared pointer between map and LUT
-    // When references are removed from both, the Order will be freed.
-    book_level[order.price].fifo.push_back(order);
+    book_level[order.price].push_back(order);
+    book_level[order.price].total += remaining_qty;
     return static_cast<fifo_idx_t>(book_level[order.price].fifo.end() -
                                    book_level[order.price].fifo.begin() - 1);
   }
   return kMaxDQIdx;
 }
 
-oid_t OrderBook::execute_order(Order& order, OrderResult& result)
+fifo_idx_t OrderBook::execute_order(Order& order, OrderResult& result)
 {
   if (order.side == OrderSide::kBuy) {
-    auto lte_compare = [](double level_price, double order_price) -> bool {
-      return level_price <= order_price;
-    };
-    return update_book<levelmap::MinLevelMap, levelmap::MaxLevelMap>(
-        this->sell_orders_, this->buy_orders_, lte_compare, order, result);
+    return update_book<levelmap::MinLevelMap, levelmap::MaxLevelMap,
+                       std::less_equal<price_t>>(
+        this->sell_orders_, this->buy_orders_, order, result);
   } else {  // OrderSide::kSell
-    auto gte_compare = [](double level_price, double order_price) -> bool {
-      return level_price >= order_price;
-    };
-    return update_book<levelmap::MaxLevelMap, levelmap::MinLevelMap>(
-        this->buy_orders_, this->sell_orders_, gte_compare, order, result);
+    return update_book<levelmap::MaxLevelMap, levelmap::MinLevelMap,
+                       std::greater_equal<price_t>>(
+        this->buy_orders_, this->sell_orders_, order, result);
   }
 }
 

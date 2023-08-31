@@ -7,7 +7,10 @@
 
 namespace levelmap
 {
-template <typename Key, typename Value, template <typename> class Compare>
+template <typename T>
+concept arithmetic = std::integral<T> || std::floating_point<T>;
+
+template <arithmetic Key, typename Value, template <typename> class Compare>
 class LevelMap
 {
  public:
@@ -37,6 +40,11 @@ class LevelMap
   struct OQueue {
     size_t total;
     std::deque<Value> fifo;
+    decltype(auto) pop_front() { return fifo.pop_front(); }
+
+    decltype(auto) push_back(const Value& v) { return fifo.push_back(v); }
+
+    bool empty() const { return total == 0 || fifo.empty(); }
   };
   std::map<Key, OQueue, Compare<Key>> fifo_map;
 };

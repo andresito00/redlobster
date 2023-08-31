@@ -29,7 +29,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wnull-dereference")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wdouble-promotion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat=2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 # TODO: -Wlifetime
 
 add_subdirectory(order_book)

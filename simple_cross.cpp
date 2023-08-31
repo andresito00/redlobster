@@ -7,9 +7,6 @@
 #include <order_book.h>
 #include "simple_cross.h"
 
-namespace scross
-{
-
 static std::unordered_set<std::string> kAllowableActionTokens{"O", "X", "P"};
 static std::unordered_set<char> kAllowableSides{'B', 'S'};
 
@@ -111,5 +108,3 @@ results_t SimpleCross::action(const std::string& line)
   auto action = Action::deserialize(line);
   return action->handle_action(this->books_);
 }
-
-}  // namespace scross
