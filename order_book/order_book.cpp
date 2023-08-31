@@ -61,7 +61,8 @@ static dq_idx_t update_book(T& search_level, U& book_level,
         // candidate order has been exhausted, or was previously cancelled
         order_queue.pop_front();
         if (order_queue.empty()) {
-          // Erase invalidates the current iterators, reset them.
+          // Erase invalidates the current price level
+          // and resets iterators.
           search_level.erase(search_it->first);
           search_it = search_level.begin();
           break;
@@ -87,13 +88,13 @@ oid_t OrderBook::execute_order(Order& order, OrderResult& result)
     auto lte_compare = [](double level_price, double order_price) -> bool {
       return level_price <= order_price;
     };
-    return update_book<MinLevelMap, MaxLevelMap>(
+    return update_book<levelmap::MinLevelMap, levelmap::MaxLevelMap>(
         this->sell_orders_, this->buy_orders_, lte_compare, order, result);
   } else {  // OrderSide::kSell
     auto gte_compare = [](double level_price, double order_price) -> bool {
       return level_price >= order_price;
     };
-    return update_book<MaxLevelMap, MinLevelMap>(
+    return update_book<levelmap::MaxLevelMap, levelmap::MinLevelMap>(
         this->buy_orders_, this->sell_orders_, gte_compare, order, result);
   }
 }
@@ -115,7 +116,10 @@ OrderResult BookMap::handle_order(Order& order)
   if (dq_idx != kMaxDQIdx) {
     this->lut_[curr_oid] = order;
     return result;
-  }
+  } /*else if (this->bmap_[order.symbol].empty()) {
+    this->bmap_.erase(order.symbol);
+    // TODO: erase from symbol registry
+  }*/
   this->lut_.erase(curr_oid);
   return result;
 }

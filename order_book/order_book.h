@@ -8,20 +8,18 @@
 #include <list>
 #include <string>
 #include "order.h"
+#include "level_map.h"
 
 namespace order
 {
-
-using MaxLevelMap = std::map<double, std::deque<Order>, std::greater<double>>;
-using MinLevelMap = std::map<double, std::deque<Order>>;
 
 class OrderBook
 {
  public:
   dq_idx_t execute_order(Order& order, OrderResult& result);
-  inline MinLevelMap& get_sell_orders() { return this->sell_orders_; }
+  inline levelmap::MinLevelMap& get_sell_orders() { return this->sell_orders_; }
 
-  inline MaxLevelMap& get_buy_orders() { return this->buy_orders_; }
+  inline levelmap::MaxLevelMap& get_buy_orders() { return this->buy_orders_; }
 
   inline void kill_buy_order(price_t price, dq_idx_t idx)
   {
@@ -33,9 +31,14 @@ class OrderBook
     this->sell_orders_[price][idx].qty = 0;
   }
 
+  inline bool empty() const noexcept
+  {
+    return this->sell_orders_.empty() && this->buy_orders_.empty();
+  }
+
  private:
-  MaxLevelMap buy_orders_;
-  MinLevelMap sell_orders_;
+  levelmap::MaxLevelMap buy_orders_;
+  levelmap::MinLevelMap sell_orders_;
 };
 
 class BookMap
