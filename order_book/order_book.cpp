@@ -10,9 +10,10 @@ namespace order
 
 // TODO: Further restrict this template type
 template <typename T, typename U>
-static dq_idx_t update_book(T& search_level, U& book_level,
-                            std::function<bool(double, double)> meets_price_req,
-                            Order& order, OrderResult& result)
+static fifo_idx_t update_book(
+    T& search_level, U& book_level,
+    std::function<bool(double, double)> meets_price_req, Order& order,
+    OrderResult& result)
 {
   // for every level starting at get_start, search for possible matches
   auto search_it = search_level.begin();
@@ -24,9 +25,9 @@ static dq_idx_t update_book(T& search_level, U& book_level,
       break;
     }
 
-    while (!order_queue.empty() && remaining_qty > 0) {
+    while (!order_queue.fifo.empty() && remaining_qty > 0) {
       // req_quantity can never be 0 here
-      auto& candidate = order_queue.front();
+      auto& candidate = order_queue.fifo.front();
       if (candidate.qty >= remaining_qty) {
         candidate.qty -= remaining_qty;
 
@@ -59,8 +60,8 @@ static dq_idx_t update_book(T& search_level, U& book_level,
 
       if (candidate.qty == 0) {
         // candidate order has been exhausted, or was previously cancelled
-        order_queue.pop_front();
-        if (order_queue.empty()) {
+        order_queue.fifo.pop_front();
+        if (order_queue.fifo.empty()) {
           // Erase invalidates the current price level
           // and resets iterators.
           search_level.erase(search_it->first);
@@ -75,9 +76,9 @@ static dq_idx_t update_book(T& search_level, U& book_level,
     order.qty = remaining_qty;
     // TODO: Currently considering using a shared pointer between map and LUT
     // When references are removed from both, the Order will be freed.
-    book_level[order.price].push_back(order);
-    return static_cast<dq_idx_t>(book_level[order.price].end() -
-                                 book_level[order.price].begin() - 1);
+    book_level[order.price].fifo.push_back(order);
+    return static_cast<fifo_idx_t>(book_level[order.price].fifo.end() -
+                                   book_level[order.price].fifo.begin() - 1);
   }
   return kMaxDQIdx;
 }
@@ -162,15 +163,15 @@ std::list<std::string> serialize_book(OrderBook& book, char prepend)
   std::list<std::string> buy_strings{};
   auto sells = book.get_sell_orders();
   for (auto it = sells.rbegin(); it != sells.rend(); ++it) {
-    auto order_fifo = it->second;
+    auto ofifo = it->second;
     sell_strings.splice(sell_strings.end(),
-                        get_order_strings(order_fifo, prepend));
+                        get_order_strings(ofifo.fifo, prepend));
   }
   auto buys = book.get_buy_orders();
   for (auto it = buys.begin(); it != buys.end(); ++it) {
-    auto order_fifo = it->second;
+    auto ofifo = it->second;
     buy_strings.splice(buy_strings.end(),
-                       get_order_strings(order_fifo, prepend));
+                       get_order_strings(ofifo.fifo, prepend));
   }
   result.splice(result.end(), sell_strings);
   result.splice(result.end(), buy_strings);

@@ -19,7 +19,7 @@ class LevelMap
 
   decltype(auto) rend() { return fifo_map.rend(); }
 
-  bool empty() const { return fifo_map.empty() || total == 0; }
+  bool empty() const { return fifo_map.empty(); }
 
   template <typename... Args>
   decltype(auto) erase(Args&&... args)
@@ -34,8 +34,11 @@ class LevelMap
   }
 
  private:
-  std::map<Key, std::deque<Value>, Compare<Key>> fifo_map;
-  size_t total;
+  struct OQueue {
+    size_t total;
+    std::deque<Value> fifo;
+  };
+  std::map<Key, OQueue, Compare<Key>> fifo_map;
 };
 
 using MaxLevelMap = LevelMap<order::price_t, order::Order, std::greater>;

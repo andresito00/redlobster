@@ -18,9 +18,9 @@ enum class OrderSide {
 using oid_t = uint32_t;
 using qty_t = uint16_t;
 using price_t = double;
-using dq_idx_t = uint32_t;
+using fifo_idx_t = uint32_t;
 static constexpr oid_t kMaxOID = std::numeric_limits<oid_t>::max();
-static constexpr oid_t kMaxDQIdx = std::numeric_limits<dq_idx_t>::max();
+static constexpr oid_t kMaxDQIdx = std::numeric_limits<fifo_idx_t>::max();
 
 struct Order {
   oid_t oid;
@@ -28,7 +28,7 @@ struct Order {
   OrderSide side;
   qty_t qty;
   price_t price;
-  dq_idx_t idx;
+  fifo_idx_t idx;
   Order();
   Order(oid_t oid, std::string symbol, OrderSide side, qty_t qty,
         price_t price);
