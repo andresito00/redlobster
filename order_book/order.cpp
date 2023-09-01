@@ -6,7 +6,10 @@
 namespace order
 {
 
-Order::Order() : oid(kMaxOID) {}
+Order::Order()
+    : oid(kMaxOID), side(OrderSide::kBuy), qty(0), price(0.0), idx(kMaxDQIdx)
+{
+}
 Order::Order(uint32_t oid, std::string symbol, OrderSide side, uint16_t qty,
              double price)
     : oid(oid),
@@ -39,7 +42,7 @@ Order::Order(Order&& other)
   }
   other.oid = kMaxOID;
   other.symbol = "";
-  other.side = OrderSide::kNone;
+  other.side = OrderSide::kBuy;
   other.qty = 0;
   other.price = 0.0;
   other.idx = kMaxDQIdx;
@@ -73,7 +76,7 @@ Order& Order::operator=(Order&& other)
 
   other.oid = kMaxOID;
   other.symbol = "";
-  other.side = OrderSide::kNone;
+  other.side = OrderSide::kBuy;
   other.qty = 0;
   other.price = 0.0;
   other.idx = kMaxDQIdx;

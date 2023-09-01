@@ -1,5 +1,5 @@
-#ifndef ORDER_H_
-#define ORDER_H_
+#ifndef ORDER_BOOK_ORDER_H_
+#define ORDER_BOOK_ORDER_H_
 #include <string>
 #include <vector>
 #include <queue>
@@ -10,7 +10,6 @@ namespace order
 {
 
 enum class OrderSide {
-  kNone = 'U',
   kSell = 'S',
   kBuy = 'B',
 };
@@ -56,4 +55,4 @@ struct OrderResult {
 
 };  // namespace order
 
-#endif  // ORDER_H_
+#endif  // ORDER_BOOK_ORDER_H_

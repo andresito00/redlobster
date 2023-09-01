@@ -5,6 +5,7 @@
 #include <functional>
 #include <unordered_set>
 #include <order_book.h>
+#include <order.h>
 #include "simple_cross.h"
 
 static std::unordered_set<std::string> kAllowableActionTokens{"O", "X", "P"};

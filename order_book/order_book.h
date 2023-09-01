@@ -16,33 +16,66 @@ namespace order
 class OrderBook
 {
  public:
-  fifo_idx_t execute_order(Order& order, OrderResult& result);
-  inline levelmap::MinLevelMap& get_sell_orders() { return sell_orders_; }
-
-  inline levelmap::MaxLevelMap& get_buy_orders() { return buy_orders_; }
-
-  inline void kill_buy_order(price_t price, fifo_idx_t idx)
+  OrderBook() = default;
+  fifo_idx_t place_order(Order& order, OrderResult& result);
+  std::vector<fifo_idx_t> place_orders(std::vector<Order>& orders,
+                                       std::vector<OrderResult>& results);
+  void kill_order(Order& order);
+  inline const levelmap::MinLevelMap& get_sell_orders() const
   {
-    auto& level = buy_orders_[price];
-    buy_orders_.dec_counts(price, level.fifo[idx].qty);
-    level.fifo[idx].qty = 0;
+    return sell_orders_;
   }
-
-  inline void kill_sell_order(price_t price, fifo_idx_t idx)
+  inline const levelmap::MinLevelMap& get_buy_orders() const
   {
-    auto& level = sell_orders_[price];
-    sell_orders_.dec_counts(price, level.fifo[idx].qty);
-    level.fifo[idx].qty = 0;
+    return buy_orders_;
   }
-
-  inline bool empty() const noexcept { return empty_buys() && empty_sells(); }
-
-  inline bool empty_buys() const noexcept { return buy_orders_.empty(); }
-
-  inline bool empty_sells() const noexcept { return sell_orders_.empty(); }
+  inline size_t buy_order_count() const noexcept
+  {
+    return buy_orders_.order_count();
+  }
+  inline size_t sell_order_count() const noexcept
+  {
+    return sell_orders_.order_count();
+  }
+  inline size_t order_count() const noexcept
+  {
+    return buy_order_count() + sell_order_count();
+  }
+  inline size_t fifos_size() const noexcept
+  {
+    return buy_orders_.fifos_size() + sell_orders_.fifos_size();
+  }
+  inline size_t maps_size() const noexcept
+  {
+    return buy_orders_.map_size() + sell_orders_.map_size();
+  }
+  inline bool empty() const noexcept { return buys_empty() && sells_empty(); }
+  inline bool maps_empty() const noexcept
+  {
+    return buy_map_empty() && sell_map_empty();
+  }
+  inline bool fifos_empty() const noexcept
+  {
+    return buy_fifos_empty() && sell_fifos_empty();
+  }
+  inline bool buys_empty() const noexcept { return buy_orders_.empty(); }
+  inline bool sells_empty() const noexcept { return sell_orders_.empty(); }
+  inline bool buy_fifos_empty() const noexcept
+  {
+    return buy_orders_.fifos_empty();
+  }
+  inline bool sell_fifos_empty() const noexcept
+  {
+    return sell_orders_.fifos_empty();
+  }
+  inline bool buy_map_empty() const noexcept { return buy_orders_.map_empty(); }
+  inline bool sell_map_empty() const noexcept
+  {
+    return sell_orders_.map_empty();
+  }
 
  private:
-  levelmap::MaxLevelMap buy_orders_;
+  levelmap::MinLevelMap buy_orders_;
   levelmap::MinLevelMap sell_orders_;
 };
 

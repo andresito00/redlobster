@@ -9,23 +9,21 @@ namespace order
 {
 
 // TODO: Further restrict this template type
-template <typename T, typename U, typename Compare>
-static fifo_idx_t update_book(T& search_level, U& book_level, Order& order,
-                              OrderResult& result)
+// templating this function on different types: min vs. max level map --> 2023 bytes with O(s)
+// runtime changes to implement get_first_level and meets_price_req:  --> 1245 bytes with O(s)
+static qty_t update_book(levelmap::MinLevelMap& search_levels,
+                         std::function<bool(price_t, price_t)> meets_price_req,
+                         Order& order, OrderResult& result)
 {
-  auto meets_price_req = [](price_t level_price, price_t order_price) -> bool {
-    return Compare()(level_price, order_price);
-  };
-  auto search_it = search_level.begin();
   auto remaining_qty = order.qty;
-  while (search_it != search_level.end() && remaining_qty > 0) {
-    auto& [price, level] = *search_it;
+  while (!search_levels.fifos_empty() && remaining_qty > 0) {
+    auto& [price, level] = search_levels.get_first_level(order);
     if (!meets_price_req(price, order.price)) {
       // all following prices will exceed/fall below the req
       break;
     }
 
-    while (!level.empty() && remaining_qty > 0) {
+    while (!level.fifo_empty() && remaining_qty > 0) {
       auto& candidate = level.fifo.front();
       if (candidate.qty > 0) {
         auto min_fill = std::min(candidate.qty, remaining_qty);
@@ -35,11 +33,11 @@ static fifo_idx_t update_book(T& search_level, U& book_level, Order& order,
         inbound_filled.price = price;  // fill price might change for inbound
         outbound_filled.qty = min_fill;
 
-        result.orders.emplace_back(inbound_filled);
-        result.orders.emplace_back(outbound_filled);
+        result.orders.emplace_back(std::move(inbound_filled));
+        result.orders.emplace_back(std::move(outbound_filled));
         candidate.qty -= min_fill;
         remaining_qty -= min_fill;
-        search_level.dec_counts(price, min_fill);
+        search_levels.dec_counts(price, min_fill);
       }
 
       if (candidate.qty == 0) {
@@ -49,32 +47,57 @@ static fifo_idx_t update_book(T& search_level, U& book_level, Order& order,
     }
 
     if (level.empty()) {
-      search_level.erase(search_it->first);
-      search_it = search_level.begin();
+      search_levels.erase(price);
     }
   }
-
-  if (remaining_qty) {
-    order.qty = remaining_qty;
-    book_level[order.price].push_back(order);
-    book_level.inc_counts(order.price, remaining_qty);
-    return static_cast<fifo_idx_t>(book_level[order.price].fifo.end() -
-                                   book_level[order.price].fifo.begin() - 1);
-  }
-  return kMaxDQIdx;
+  return remaining_qty;
 }
 
-fifo_idx_t OrderBook::execute_order(Order& order, OrderResult& result)
+fifo_idx_t OrderBook::place_order(Order& order, OrderResult& result)
 {
-  if (order.side == OrderSide::kBuy) {
-    return update_book<levelmap::MinLevelMap, levelmap::MaxLevelMap,
-                       std::less_equal<price_t>>(sell_orders_, buy_orders_,
-                                                 order, result);
-  } else {  // OrderSide::kSell
-    return update_book<levelmap::MaxLevelMap, levelmap::MinLevelMap,
-                       std::greater_equal<price_t>>(buy_orders_, sell_orders_,
-                                                    order, result);
+  // TODO: check for optimal branch assembly...
+  std::function<bool(price_t, price_t)> compare_fn;
+  if (order.side == order::OrderSide::kBuy) {
+    compare_fn = std::less_equal<price_t>();
+  } else {
+    compare_fn = std::greater_equal<price_t>();
   }
+  auto& search_levels =
+      (order.side == order::OrderSide::kBuy) ? sell_orders_ : buy_orders_;
+  auto& book_levels =
+      (order.side == order::OrderSide::kBuy) ? buy_orders_ : sell_orders_;
+  if (auto remaining_qty =
+          update_book(search_levels, compare_fn, order, result)) {
+    order.qty = remaining_qty;
+    book_levels[order.price].push_back(order);
+    book_levels.inc_counts(order.price, remaining_qty);
+    return order.idx = static_cast<fifo_idx_t>(
+               book_levels[order.price].fifo.end() -
+               book_levels[order.price].fifo.begin() - 1);
+  }
+  return order.idx = kMaxDQIdx;
+}
+
+std::vector<fifo_idx_t> OrderBook::place_orders(
+    std::vector<Order>& orders, std::vector<OrderResult>& results)
+{
+  size_t n = orders.size();
+  if (n != results.size()) {
+    return {};
+  }
+  std::vector<fifo_idx_t> result;
+  result.reserve(n);
+  for (size_t i = 0; i < n; ++i) {
+    result.push_back(place_order(orders[i], results[i]));
+  }
+  return result;
+}
+
+void OrderBook::kill_order(Order& order)
+{
+  auto& levels = (order.side == OrderSide::kBuy) ? buy_orders_ : sell_orders_;
+  levels.dec_counts(order.price, levels[order.price].fifo[order.idx].qty);
+  levels[order.price].fifo[order.idx].qty = 0;
 }
 
 OrderResult BookMap::handle_order(Order& order)
@@ -89,8 +112,7 @@ OrderResult BookMap::handle_order(Order& order)
   // reserve while in flight...
   lut_[curr_oid];
   OrderResult result{ResultType::kFilled, "", {}};
-  auto dq_idx = bmap_[order.symbol].execute_order(order, result);
-  order.idx = dq_idx;
+  auto dq_idx = bmap_[order.symbol].place_order(order, result);
   if (dq_idx != kMaxDQIdx) {
     lut_[curr_oid] = order;
     return result;
@@ -105,19 +127,15 @@ OrderResult BookMap::handle_order(Order& order)
 OrderResult BookMap::cancel_order(const oid_t oid)
 {
   if (lut_.count(oid)) {
-    auto key = lut_[oid];
+    auto order = lut_[oid];
     // Copy out useful metadata before we erase the K,V pair.
-    auto result = OrderResult{ResultType::kCancelled, "", {key}};
-    if (key.side == OrderSide::kBuy) {
-      bmap_[key.symbol].kill_buy_order(key.price, key.idx);
-    } else {
-      bmap_[key.symbol].kill_sell_order(key.price, key.idx);
-    }
+    auto result = OrderResult{ResultType::kCancelled, "", {order}};
+    bmap_[order.symbol].kill_order(order);
     // Erase this oid, so incoming orders may now use it.
     // The Order instance will be destroyed lazily.
     lut_.erase(oid);
-    if (bmap_[key.symbol].empty()) {
-      bmap_.erase(key.symbol);
+    if (bmap_[order.symbol].empty()) {
+      bmap_.erase(order.symbol);
     }
     return result;
   }
@@ -148,7 +166,7 @@ std::list<std::string> serialize_book(OrderBook& book, char prepend)
                         get_order_strings(ofifo.fifo, prepend));
   }
   auto buys = book.get_buy_orders();
-  for (auto it = buys.begin(); it != buys.end(); ++it) {
+  for (auto it = buys.rbegin(); it != buys.rend(); ++it) {
     auto ofifo = it->second;
     buy_strings.splice(buy_strings.end(),
                        get_order_strings(ofifo.fifo, prepend));
