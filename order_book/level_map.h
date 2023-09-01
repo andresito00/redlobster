@@ -26,14 +26,14 @@ class LevelMap
 
   void inc_counts(order::price_t price, size_t count)
   {
-    this->fifo_map[price].num_orders += count;
-    this->num_orders += count;
+    fifo_map[price].num_orders += count;
+    num_orders += count;
   }
 
   void dec_counts(order::price_t price, size_t count)
   {
-    this->fifo_map[price].num_orders -= count;
-    this->num_orders -= count;
+    fifo_map[price].num_orders -= count;
+    num_orders -= count;
   }
 
   template <typename... Args>

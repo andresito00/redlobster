@@ -17,32 +17,29 @@ class OrderBook
 {
  public:
   fifo_idx_t execute_order(Order& order, OrderResult& result);
-  inline levelmap::MinLevelMap& get_sell_orders() { return this->sell_orders_; }
+  inline levelmap::MinLevelMap& get_sell_orders() { return sell_orders_; }
 
-  inline levelmap::MaxLevelMap& get_buy_orders() { return this->buy_orders_; }
+  inline levelmap::MaxLevelMap& get_buy_orders() { return buy_orders_; }
 
   inline void kill_buy_order(price_t price, fifo_idx_t idx)
   {
-    auto& level = this->buy_orders_[price];
-    this->buy_orders_.dec_counts(price, level.fifo[idx].qty);
+    auto& level = buy_orders_[price];
+    buy_orders_.dec_counts(price, level.fifo[idx].qty);
     level.fifo[idx].qty = 0;
   }
 
   inline void kill_sell_order(price_t price, fifo_idx_t idx)
   {
-    auto& level = this->sell_orders_[price];
-    this->sell_orders_.dec_counts(price, level.fifo[idx].qty);
+    auto& level = sell_orders_[price];
+    sell_orders_.dec_counts(price, level.fifo[idx].qty);
     level.fifo[idx].qty = 0;
   }
 
   inline bool empty() const noexcept { return empty_buys() && empty_sells(); }
 
-  inline bool empty_buys() const noexcept { return this->buy_orders_.empty(); }
+  inline bool empty_buys() const noexcept { return buy_orders_.empty(); }
 
-  inline bool empty_sells() const noexcept
-  {
-    return this->sell_orders_.empty();
-  }
+  inline bool empty_sells() const noexcept { return sell_orders_.empty(); }
 
  private:
   levelmap::MaxLevelMap buy_orders_;

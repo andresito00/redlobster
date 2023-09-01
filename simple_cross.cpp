@@ -24,7 +24,7 @@ struct PlaceOrderAction : public OrderAction {
   }
   virtual results_t handle_action(order::BookMap& books) override final
   {
-    return books.handle_order(this->order).serialize();
+    return books.handle_order(order).serialize();
   }
 };
 
@@ -106,5 +106,5 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
 results_t SimpleCross::action(const std::string& line)
 {
   auto action = Action::deserialize(line);
-  return action->handle_action(this->books_);
+  return action->handle_action(books_);
 }

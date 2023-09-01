@@ -101,14 +101,14 @@ std::string Order::str(char prepend, bool print_side) const
 std::list<std::string> OrderResult::serialize() const
 {
   std::list<std::string> result;
-  if (this->type == ResultType::kFilled) {
-    for (const auto& o : this->orders) {
+  if (type == ResultType::kFilled) {
+    for (const auto& o : orders) {
       result.push_back(o.str('F', false));
     }
-  } else if (this->type == ResultType::kError) {
-    result.push_back("E " + this->error_msg);
-  } else if (this->type == ResultType::kCancelled) {
-    result.push_back("X " + std::to_string(this->orders.front().oid));
+  } else if (type == ResultType::kError) {
+    result.push_back("E " + error_msg);
+  } else if (type == ResultType::kCancelled) {
+    result.push_back("X " + std::to_string(orders.front().oid));
   }
   return result;
 }

@@ -68,12 +68,12 @@ fifo_idx_t OrderBook::execute_order(Order& order, OrderResult& result)
 {
   if (order.side == OrderSide::kBuy) {
     return update_book<levelmap::MinLevelMap, levelmap::MaxLevelMap,
-                       std::less_equal<price_t>>(
-        this->sell_orders_, this->buy_orders_, order, result);
+                       std::less_equal<price_t>>(sell_orders_, buy_orders_,
+                                                 order, result);
   } else {  // OrderSide::kSell
     return update_book<levelmap::MaxLevelMap, levelmap::MinLevelMap,
-                       std::greater_equal<price_t>>(
-        this->buy_orders_, this->sell_orders_, order, result);
+                       std::greater_equal<price_t>>(buy_orders_, sell_orders_,
+                                                    order, result);
   }
 }
 
@@ -81,43 +81,43 @@ OrderResult BookMap::handle_order(Order& order)
 {
   // check for dups
   auto curr_oid = order.oid;
-  if (this->lut_.count(curr_oid)) {
+  if (lut_.count(curr_oid)) {
     return OrderResult{ResultType::kError,
                        std::to_string(curr_oid) + " Duplicate order id",
                        {}};
   }
   // reserve while in flight...
-  this->lut_[curr_oid];
+  lut_[curr_oid];
   OrderResult result{ResultType::kFilled, "", {}};
-  auto dq_idx = this->bmap_[order.symbol].execute_order(order, result);
+  auto dq_idx = bmap_[order.symbol].execute_order(order, result);
   order.idx = dq_idx;
   if (dq_idx != kMaxDQIdx) {
-    this->lut_[curr_oid] = order;
+    lut_[curr_oid] = order;
     return result;
-  } else if (this->bmap_[order.symbol].empty()) {
-    this->bmap_.erase(order.symbol);
+  } else if (bmap_[order.symbol].empty()) {
+    bmap_.erase(order.symbol);
     // TODO: erase from symbol registry
   }
-  this->lut_.erase(curr_oid);
+  lut_.erase(curr_oid);
   return result;
 }
 
 OrderResult BookMap::cancel_order(const oid_t oid)
 {
-  if (this->lut_.count(oid)) {
-    auto key = this->lut_[oid];
+  if (lut_.count(oid)) {
+    auto key = lut_[oid];
     // Copy out useful metadata before we erase the K,V pair.
     auto result = OrderResult{ResultType::kCancelled, "", {key}};
     if (key.side == OrderSide::kBuy) {
-      this->bmap_[key.symbol].kill_buy_order(key.price, key.idx);
+      bmap_[key.symbol].kill_buy_order(key.price, key.idx);
     } else {
-      this->bmap_[key.symbol].kill_sell_order(key.price, key.idx);
+      bmap_[key.symbol].kill_sell_order(key.price, key.idx);
     }
     // Erase this oid, so incoming orders may now use it.
     // The Order instance will be destroyed lazily.
-    this->lut_.erase(oid);
-    if (this->bmap_[key.symbol].empty()) {
-      this->bmap_.erase(key.symbol);
+    lut_.erase(oid);
+    if (bmap_[key.symbol].empty()) {
+      bmap_.erase(key.symbol);
     }
     return result;
   }
