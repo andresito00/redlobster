@@ -24,14 +24,14 @@ class OrderBook
   inline void kill_buy_order(price_t price, fifo_idx_t idx)
   {
     auto& level = this->buy_orders_[price];
-    level.total -= level.fifo[idx].qty;
+    this->buy_orders_.dec_counts(price, level.fifo[idx].qty);
     level.fifo[idx].qty = 0;
   }
 
   inline void kill_sell_order(price_t price, fifo_idx_t idx)
   {
     auto& level = this->sell_orders_[price];
-    level.total -= level.fifo[idx].qty;
+    this->sell_orders_.dec_counts(price, level.fifo[idx].qty);
     level.fifo[idx].qty = 0;
   }
 

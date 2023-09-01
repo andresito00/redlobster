@@ -58,8 +58,8 @@ bool is_whitespace(const std::string& line)
 
 std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
 {
-  if (action_string.size() == 0 || is_whitespace(action_string) ||
-      action_string.starts_with('#')) {
+  if (action_string.size() == 0 || action_string.starts_with('#') ||
+      is_whitespace(action_string)) {
     return std::make_unique<Action>();
   }
   std::stringstream astream(action_string);

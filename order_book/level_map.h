@@ -22,7 +22,19 @@ class LevelMap
 
   decltype(auto) rend() { return fifo_map.rend(); }
 
-  bool empty() const { return fifo_map.empty(); }
+  bool empty() const { return num_orders == 0 || fifo_map.empty(); }
+
+  void inc_counts(order::price_t price, size_t count)
+  {
+    this->fifo_map[price].num_orders += count;
+    this->num_orders += count;
+  }
+
+  void dec_counts(order::price_t price, size_t count)
+  {
+    this->fifo_map[price].num_orders -= count;
+    this->num_orders -= count;
+  }
 
   template <typename... Args>
   decltype(auto) erase(Args&&... args)
@@ -38,15 +50,16 @@ class LevelMap
 
  private:
   struct OQueue {
-    size_t total;
+    size_t num_orders;
     std::deque<Value> fifo;
     decltype(auto) pop_front() { return fifo.pop_front(); }
 
     decltype(auto) push_back(const Value& v) { return fifo.push_back(v); }
 
-    bool empty() const { return total == 0 || fifo.empty(); }
+    bool empty() const { return num_orders == 0 || fifo.empty(); }
   };
   std::map<Key, OQueue, Compare<Key>> fifo_map;
+  size_t num_orders;
 };
 
 using MaxLevelMap = LevelMap<order::price_t, order::Order, std::greater>;

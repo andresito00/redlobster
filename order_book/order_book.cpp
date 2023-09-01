@@ -26,7 +26,6 @@ static fifo_idx_t update_book(T& search_level, U& book_level, Order& order,
     }
 
     while (!level.empty() && remaining_qty > 0) {
-      // req_quantity can never be 0 here
       auto& candidate = level.fifo.front();
       if (candidate.qty > 0) {
         auto min_fill = std::min(candidate.qty, remaining_qty);
@@ -40,7 +39,7 @@ static fifo_idx_t update_book(T& search_level, U& book_level, Order& order,
         result.orders.emplace_back(outbound_filled);
         candidate.qty -= min_fill;
         remaining_qty -= min_fill;
-        level.total -= min_fill;
+        search_level.dec_counts(price, min_fill);
       }
 
       if (candidate.qty == 0) {
@@ -50,8 +49,6 @@ static fifo_idx_t update_book(T& search_level, U& book_level, Order& order,
     }
 
     if (level.empty()) {
-      // Erase invalidates the current price level
-      // and resets iterators.
       search_level.erase(search_it->first);
       search_it = search_level.begin();
     }
@@ -60,7 +57,7 @@ static fifo_idx_t update_book(T& search_level, U& book_level, Order& order,
   if (remaining_qty) {
     order.qty = remaining_qty;
     book_level[order.price].push_back(order);
-    book_level[order.price].total += remaining_qty;
+    book_level.inc_counts(order.price, remaining_qty);
     return static_cast<fifo_idx_t>(book_level[order.price].fifo.end() -
                                    book_level[order.price].fifo.begin() - 1);
   }
@@ -97,10 +94,10 @@ OrderResult BookMap::handle_order(Order& order)
   if (dq_idx != kMaxDQIdx) {
     this->lut_[curr_oid] = order;
     return result;
-  } /*else if (this->bmap_[order.symbol].empty()) {
+  } else if (this->bmap_[order.symbol].empty()) {
     this->bmap_.erase(order.symbol);
     // TODO: erase from symbol registry
-  }*/
+  }
   this->lut_.erase(curr_oid);
   return result;
 }
@@ -119,6 +116,9 @@ OrderResult BookMap::cancel_order(const oid_t oid)
     // Erase this oid, so incoming orders may now use it.
     // The Order instance will be destroyed lazily.
     this->lut_.erase(oid);
+    if (this->bmap_[key.symbol].empty()) {
+      this->bmap_.erase(key.symbol);
+    }
     return result;
   }
   return OrderResult{

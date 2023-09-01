@@ -4,7 +4,6 @@ project(simple-cross-exe)
 set(CMAKE_C_COMPILER "clang")
 set(CMAKE_CXX_COMPILER "clang++")
 
-# Needs system include to avoid clang-tidy warnings
 include_directories(order_book/)
 
 set(simple_cross_src main.cpp simple_cross.cpp)
