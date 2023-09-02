@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.18.2)
 project(simple-cross-exe)
 
-set(CMAKE_CXX_COMPILER, "clang++")
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG") # need symbols for gdb
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
