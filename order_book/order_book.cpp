@@ -46,6 +46,15 @@ static qty_t update_book(levelmap::MinLevelMap *search_levels,
     }
 
     if (search_levels->level_empty(price)) {
+      // This is where we do our clean-up.
+      // If the total QTY COUNTS are 0 we can erase the price level.
+      //
+      // We don't necesssarily have to wait for the FIFO to be empty of objects.
+      //
+      // Normally map.erase does not throw.
+      // However, in most cases (except this one) we SHOULD
+      // be catching an exception here because of the .at check for the size
+      // tally update in the wrapper implementation.
       search_levels->erase(price);
     }
   }

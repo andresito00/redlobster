@@ -116,6 +116,15 @@ class LevelMap
     fifo_map_[price].fifo[idx].qty = 0;
   }
 
+  /**
+   * Users MUST try/catch this in any usage where they
+   * given key is either:
+   * a) NOT first discovered from underlying map or,
+   * b) is subject to change through some other out-of-band modification.
+   *
+   * Right now, this is only used in update_book with keys that were
+   * found in the map.
+  */
   decltype(auto) erase(const Key& k)
   {
     total_fifos_size_ -= fifo_map_.at(k).size();
