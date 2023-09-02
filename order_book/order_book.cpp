@@ -16,14 +16,14 @@ static qty_t update_book(levelmap::MinLevelMap *search_levels,
 {
   auto remaining_qty = order->qty;
   while (!search_levels->fifos_empty() && remaining_qty > 0) {
-    auto &[price, level] = search_levels->get_first_level(*order);
+    auto &[price, _] = search_levels->get_first_level(order);
     if (!meets_price_req(price, order->price)) {
       // all following prices will exceed/fall below the req
       break;
     }
 
-    while (!level.fifo_empty() && remaining_qty > 0) {
-      auto &candidate = level.front();
+    while (!search_levels->level_empty(price) && remaining_qty > 0) {
+      auto &candidate = search_levels->front_with_key(price);
       if (candidate.qty > 0) {
         auto min_fill = std::min(candidate.qty, remaining_qty);
         auto inbound_filled = *order;
@@ -41,11 +41,11 @@ static qty_t update_book(levelmap::MinLevelMap *search_levels,
 
       if (candidate.qty == 0) {
         // candidate order has been exhausted, or was previously cancelled
-        level.pop_front();
+        search_levels->pop_front_with_key(price);
       }
     }
 
-    if (level.empty()) {
+    if (search_levels->level_empty(price)) {
       search_levels->erase(price);
     }
   }
@@ -69,9 +69,10 @@ fifo_idx_t OrderBook::place_order(Order *order, OrderResult *result)
   if (auto remaining_qty =
           update_book(search_levels, compare_fn, order, result)) {
     auto price = order->price;
-    auto next_idx = static_cast<fifo_idx_t>((*book_levels)[price].size());
+    auto next_idx =
+        static_cast<fifo_idx_t>((*book_levels).fifo_size_with_key(price));
     order->idx = next_idx;
-    (*book_levels)[price].push_back(*order);
+    (*book_levels).push_back_with_key(price, *order);
     (*book_levels).inc_counts(price, remaining_qty);
     return next_idx;
   }
@@ -97,8 +98,7 @@ std::vector<fifo_idx_t> OrderBook::place_orders(
 void OrderBook::kill_order(Order &order)
 {
   auto &levels = (order.side == OrderSide::kBuy) ? buy_orders_ : sell_orders_;
-  levels.dec_counts(order.price, levels[order.price].fifo[order.idx].qty);
-  levels[order.price].fifo[order.idx].qty = 0;
+  levels.kill_order(order.price, order.idx);
 }
 
 OrderResult BookMap::handle_order(Order *order)

@@ -24,33 +24,60 @@ class LevelMap
     OQueue() = default;
     size_t num_orders;
     FifoContainer<Value, std::allocator<Value>> fifo;
-    decltype(auto) pop_front() { return fifo.pop_front(); }
+
+    void pop_front() { return fifo.pop_front(); }
 
     decltype(auto) front() { return fifo.front(); }
 
-    decltype(auto) push_back(const Value& v) { return fifo.push_back(v); }
+    template <typename Arg>
+    void push_back(Arg&& arg)
+    {
+      return fifo.push_back(std::forward<Arg>(arg));
+    }
 
     template <typename... Args>
-    decltype(auto) emplace_back(Args&&... args)
+    void emplace_back(Args&&... args)
     {
       return fifo.emplace_back(std::forward<Args>(args)...);
     }
+
     size_t size() const { return fifo.size(); }
-    bool fifo_empty() const { return fifo.empty(); }
     bool empty() const { return num_orders == 0; }
   };
 
   LevelMap() = default;
 
-  size_t fifos_size() const noexcept
+  size_t fifos_size() const noexcept { return total_fifos_size_; }
+
+  bool level_empty(const Key& k) const { return fifo_map_.at(k).empty(); }
+
+  size_t fifo_size_with_key(const Key& k)
   {
-    size_t result = 0;
-    std::for_each(
-        fifo_map_.begin(), fifo_map_.end(),
-        [&result](const auto& pair) { result += pair.second.size(); });
-    return result;
+    if (fifo_map_.count(k)) {
+      return fifo_map_.at(k).size();
+    }
+    return 0;
   }
+
+  decltype(auto) pop_front_with_key(const Key& k)
+  {
+    --total_fifos_size_;
+    return fifo_map_.at(k).pop_front();
+  }
+
+  decltype(auto) front_with_key(const Key& k)
+  {
+    return fifo_map_.at(k).front();
+  }
+
+  decltype(auto) push_back_with_key(const Key& k, const Value& v)
+  {
+    ++total_fifos_size_;
+    return fifo_map_[k].push_back(v);
+  }
+
   size_t order_count() const noexcept { return num_orders_; }
+
   decltype(auto) begin() { return fifo_map_.begin(); }
 
   decltype(auto) end() { return fifo_map_.end(); }
@@ -83,21 +110,21 @@ class LevelMap
     num_orders_ -= count;
   }
 
-  template <typename... Args>
-  decltype(auto) erase(Args&&... args)
+  void kill_order(order::price_t price, size_t idx)
   {
-    return fifo_map_.erase(std::forward<Args>(args)...);
+    dec_counts(price, fifo_map_.at(price).fifo[idx].qty);
+    fifo_map_[price].fifo[idx].qty = 0;
   }
 
-  template <typename Arg>
-  decltype(auto) operator[](Arg&& arg)
+  decltype(auto) erase(const Key& k)
   {
-    return fifo_map_.operator[](std::forward<Arg>(arg));
+    total_fifos_size_ -= fifo_map_.at(k).size();
+    return fifo_map_.erase(k);
   }
 
-  auto& get_first_level(const Value order)
+  auto& get_first_level(const Value* order)
   {
-    if (order.side == order::OrderSide::kBuy) {
+    if (order->side == order::OrderSide::kBuy) {
       return *begin();
     } else {
       return *rbegin();
@@ -107,6 +134,7 @@ class LevelMap
  private:
   std::map<Key, OQueue, Compare<Key>> fifo_map_;
   size_t num_orders_;
+  size_t total_fifos_size_;
 };
 
 using MinLevelMap =
