@@ -33,7 +33,7 @@ class LevelMap
     {
       return fifo.emplace_back(std::forward<Args>(args)...);
     }
-    bool size() const { return fifo.size(); }
+    size_t size() const { return fifo.size(); }
     bool fifo_empty() const { return fifo.empty(); }
     bool empty() const { return num_orders == 0; }
   };
