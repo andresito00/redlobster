@@ -2,8 +2,7 @@
 #include <order_book.h>
 #include <order.h>
 #include <log.h>
-#include "test.h"
-#include "test_generators.h"
+#include "test_utils.h"
 
 /**
  * test_kill_to_empty:
@@ -22,18 +21,22 @@ int main(int argc, char* argv[])
   (void)argc;
   std::string ofile = std::string(argv[0]) + ".log";
   std::ofstream ostream(ofile, std::ios::out);
-  constexpr size_t kNumOrders = 24LU;
+  const size_t kNumOrders = kMaxOrders;
   constexpr size_t kOrderQty = 10LU;
 
   auto dummy_buys = generate_dummy_n_orders(kNumOrders, 0, kOrderQty);
   std::vector<order::OrderResult> results;
   results.resize(kNumOrders);
   order::OrderBook test_book{};
+  // * 1. Add kNumOrders or the order book
   test_book.place_orders(dummy_buys, results);
-
+  // * 2. Kill them all
   for (auto& d : dummy_buys) {
     test_book.kill_order(d);
   }
+  //  * Verify that the order_count to be 0,
+  //  * but because of how I've chosen to design the order cancellation flow
+  //  * we expect the FIFO containing those orders to still have them, granted at .qty == 0.
   std::string assert_str1("Expected order_count == 0. Found: " +
                           std::to_string(test_book.order_count()));
   assertm(test_book.empty(), assert_str1.c_str());
@@ -43,14 +46,19 @@ int main(int argc, char* argv[])
 
   order::Order dummy_order{24, "IBM", order::OrderSide::kSell, 10, 99.00};
   order::OrderResult result{};
+
+  //  * 4. Cross an order that would otherwise have been filled by the cancelled orders.
   test_book.place_order(dummy_order, result);
 
   std::string assert_str3("Expected FIFOs size == 1");
+  //  * 5. Verify that the cancelled orders were popped off their fifos.
   assertm(test_book.fifos_size() == 1, assert_str3.c_str());
 
+  //  * 6. Cross one more order to fill the one placed in Step 4.
   dummy_order.side = order::OrderSide::kBuy;
   test_book.place_order(dummy_order, result);
 
+  //  * 7. Verify that all of our data structures and counts corroborate (0, empty).
   std::string assert_str4("Expected order_count == 0: " +
                           std::to_string(test_book.order_count()));
   std::string assert_str5("Expected FIFOs size == 0: " +

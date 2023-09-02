@@ -28,8 +28,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wduplicate-enum")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wnull-dereference")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wdouble-promotion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat=2")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 # TODO: -Wlifetime
 
 add_subdirectory(order_book)
@@ -47,15 +47,15 @@ target_link_libraries(
   order_book
 )
 
-# testing binary
-add_executable(test_kill_to_empty test/test_kill_to_empty.cpp test/test_generators.cpp)
-target_link_libraries(test_kill_to_empty PRIVATE order_book)
+# testing binaries
+add_library(test_utils test/test_utils.cpp)
 
+add_executable(test_kill_to_empty test/test_kill_to_empty.cpp )
+target_link_libraries(test_kill_to_empty PRIVATE order_book test_utils)
 
-# enable testing functionality
 enable_testing()
 set(env CTEST_OUTPUT_ON_FAILURE 1)
-# define tests
+
 add_test(
   NAME test_kill_to_empty
   COMMAND $<TARGET_FILE:test_kill_to_empty>

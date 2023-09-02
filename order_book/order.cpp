@@ -1,10 +1,14 @@
 #include <sstream>
 #include <iomanip>
 #include <list>
+#include <numeric>
 #include "order.h"
 
 namespace order
 {
+
+constexpr oid_t kMaxOID = std::numeric_limits<oid_t>::max();
+constexpr fifo_idx_t kMaxDQIdx = std::numeric_limits<fifo_idx_t>::max();
 
 Order::Order()
     : oid(kMaxOID), side(OrderSide::kBuy), qty(0), price(0.0), idx(kMaxDQIdx)

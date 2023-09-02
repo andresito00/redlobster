@@ -18,8 +18,8 @@ using oid_t = uint32_t;
 using qty_t = uint16_t;
 using price_t = double;
 using fifo_idx_t = uint32_t;
-static constexpr oid_t kMaxOID = std::numeric_limits<oid_t>::max();
-static constexpr oid_t kMaxDQIdx = std::numeric_limits<fifo_idx_t>::max();
+const extern oid_t kMaxOID;
+const extern fifo_idx_t kMaxDQIdx;
 
 struct Order {
   oid_t oid;
