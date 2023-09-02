@@ -136,9 +136,19 @@ OrderResult BookMap::handle_order(Order *order)
 
 /**
  * Cancel order is a bit weird. We will 0-out the qty for the
- * order to be cancelled with an O(1) lookup.
- * Because the order FIFOs are implemented
- * with deque, not linked lists,
+ * order to be cancelled with an O(log(n)) lookup instead of destroying it.
+ * (Unless the STL is doing something fancier to make .begin() of
+ * a (std::map) red-black tree O(1).)
+ *
+ * We pay this penalty by searching through non-empty FIFOs in update_book
+ * and finally popping them off if we encounter total order counts of 0.
+ *
+ * We do this to support the use of deques and HOPEFULLY a nicer
+ * memory reference profile instead of linked list nodes, (which
+ * would otherwise offer a nicer O(1) erase on paper).
+ *
+ * I'd like to try with linked lists instead of deques to see how
+ * that affects performance if I have time.
 */
 OrderResult BookMap::cancel_order(const oid_t oid)
 {
