@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
   results.resize(kNumOrders);
   order::OrderBook test_book{};
   // * 1. Add kNumOrders or the order book
-  test_book.place_orders(dummy_buys, results);
+  test_book.place_orders(&dummy_buys, &results);
   // * 2. Kill them all
   for (auto& d : dummy_buys) {
     test_book.kill_order(d);
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
   order::OrderResult result{};
 
   //  * 4. Cross an order that would otherwise have been filled by the cancelled orders.
-  test_book.place_order(dummy_order, result);
+  test_book.place_order(&dummy_order, &result);
 
   std::string assert_str3("Expected FIFOs size == 1");
   //  * 5. Verify that the cancelled orders were popped off their fifos.
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
   //  * 6. Cross one more order to fill the one placed in Step 4.
   dummy_order.side = order::OrderSide::kBuy;
-  test_book.place_order(dummy_order, result);
+  test_book.place_order(&dummy_order, &result);
 
   //  * 7. Verify that all of our data structures and counts corroborate (0, empty).
   std::string assert_str4("Expected order_count == 0: " +

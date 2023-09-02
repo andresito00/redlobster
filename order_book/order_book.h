@@ -17,9 +17,9 @@ class OrderBook
 {
  public:
   OrderBook() = default;
-  fifo_idx_t place_order(Order& order, OrderResult& result);
-  std::vector<fifo_idx_t> place_orders(std::vector<Order>& orders,
-                                       std::vector<OrderResult>& results);
+  fifo_idx_t place_order(Order* order, OrderResult* result);
+  std::vector<fifo_idx_t> place_orders(std::vector<Order>* orders,
+                                       std::vector<OrderResult>* results);
   void kill_order(Order& order);
   inline const levelmap::MinLevelMap& get_sell_orders() const
   {
@@ -82,7 +82,7 @@ class OrderBook
 class BookMap
 {
  public:
-  OrderResult handle_order(Order& order);
+  OrderResult handle_order(Order* order);
   OrderResult cancel_order(const oid_t oid);
   std::list<std::string> serialize();
 

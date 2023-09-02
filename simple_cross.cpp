@@ -25,7 +25,7 @@ struct PlaceOrderAction : public OrderAction {
   }
   virtual results_t handle_action(order::BookMap& books) override final
   {
-    return books.handle_order(order).serialize();
+    return books.handle_order(&order).serialize();
   }
 };
 

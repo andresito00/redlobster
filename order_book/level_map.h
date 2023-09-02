@@ -8,11 +8,13 @@
 
 namespace levelmap
 {
-
+#ifdef __linux__
 template <typename T>
 concept arithmetic = std::integral<T> || std::floating_point<T>;
-
 template <arithmetic Key, typename Value,
+#elif __APPLE__
+template <typename Key, typename Value,
+#endif  // OS
           template <typename, typename> class FifoContainer,
           template <typename> class Compare>
 class LevelMap
@@ -93,7 +95,7 @@ class LevelMap
     return fifo_map_.operator[](std::forward<Arg>(arg));
   }
 
-  auto& get_first_level(const Value& order)
+  auto& get_first_level(const Value order)
   {
     if (order.side == order::OrderSide::kBuy) {
       return *begin();

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.18.2)
 project(simple-cross-exe)
 
+set(CMAKE_CXX_COMPILER, "clang++")
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG") # need symbols for gdb
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
@@ -47,10 +49,13 @@ add_library(test_utils test/test_utils.cpp)
 add_executable(test_kill_to_empty test/test_kill_to_empty.cpp )
 target_link_libraries(test_kill_to_empty PRIVATE order test_utils)
 
-enable_testing()
-set(env CTEST_OUTPUT_ON_FAILURE 1)
+add_executable(test_partial_fill test/test_partial_fill.cpp )
+target_link_libraries(test_partial_fill PRIVATE order test_utils)
 
-add_test(
-  NAME test_kill_to_empty
-  COMMAND $<TARGET_FILE:test_kill_to_empty>
-  )
+add_executable(test_full_fills_only test/test_full_fills_only.cpp )
+target_link_libraries(test_full_fills_only PRIVATE order test_utils)
+
+enable_testing()
+add_test(NAME tests
+  COMMAND "${CMAKE_CURRENT_LIST_DIR}/test.sh"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}")
