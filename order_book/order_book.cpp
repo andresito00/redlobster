@@ -23,7 +23,7 @@ static qty_t update_book(levelmap::MinLevelMap& search_levels,
     }
 
     while (!level.fifo_empty() && remaining_qty > 0) {
-      auto& candidate = level.fifo.front();
+      auto& candidate = level.front();
       if (candidate.qty > 0) {
         auto min_fill = std::min(candidate.qty, remaining_qty);
         auto inbound_filled = order;
@@ -68,12 +68,11 @@ fifo_idx_t OrderBook::place_order(Order& order, OrderResult& result)
   if (auto remaining_qty =
           update_book(search_levels, compare_fn, order, result)) {
     auto price = order.price;
-    const auto& fifo = book_levels[price].fifo;
-    auto idx = static_cast<fifo_idx_t>(fifo.end() - fifo.begin());
-    order.idx = idx;
+    auto next_idx = static_cast<fifo_idx_t>(book_levels[price].size());
+    order.idx = next_idx;
     book_levels[price].push_back(order);
     book_levels.inc_counts(price, remaining_qty);
-    return idx;
+    return next_idx;
   }
   return kMaxDQIdx;
 }
