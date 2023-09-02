@@ -15,7 +15,7 @@ Order::Order()
 {
 }
 Order::Order(uint32_t oid, std::string symbol, OrderSide side, uint16_t qty,
-             double price)
+             price_t price)
     : oid(oid),
       symbol(symbol),
       side(side),
@@ -120,4 +120,4 @@ std::list<std::string> OrderResult::serialize() const
   return result;
 }
 
-};  // namespace order
+}  // namespace order

@@ -1,8 +1,8 @@
 #ifndef ORDER_BOOK_ORDER_BOOK_H_
 #define ORDER_BOOK_ORDER_BOOK_H_
+#include <cstddef>
 #include <map>
 #include <unordered_map>
-#include <unordered_set>
 #include <queue>
 #include <numeric>
 #include <list>
@@ -87,13 +87,13 @@ class BookMap
   std::list<std::string> serialize();
 
  private:
-  std::unordered_map<std::string, OrderBook> bmap_;
-  std::unordered_map<oid_t, Order> lut_;
+  std::unordered_map<std::string, OrderBook> book_map_;
+  std::unordered_map<oid_t, Order> order_lut_;
 };
 
 std::list<std::string> get_order_strings(std::deque<Order>& fifo, bool prepend);
 std::list<std::string> serialize_book(OrderBook& book, char prepend);
 
-};  // namespace order
+}  // namespace order
 
 #endif  // ORDER_BOOK_ORDER_BOOK_H_

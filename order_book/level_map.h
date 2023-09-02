@@ -1,8 +1,9 @@
 #ifndef ORDER_BOOK_LEVEL_MAP_H_
 #define ORDER_BOOK_LEVEL_MAP_H_
-
+#include <cstddef>
 #include <algorithm>
 #include <map>
+#include <memory>
 #include "order.h"
 
 namespace levelmap
@@ -11,17 +12,25 @@ namespace levelmap
 template <typename T>
 concept arithmetic = std::integral<T> || std::floating_point<T>;
 
-template <arithmetic Key, typename Value, template <typename> class Compare>
+template <arithmetic Key, typename Value,
+          template <typename, typename> class FifoContainer,
+          template <typename> class Compare>
 class LevelMap
 {
  public:
   struct OQueue {
     OQueue() = default;
     size_t num_orders;
-    std::deque<Value> fifo;
+    FifoContainer<Value, std::allocator<Value>> fifo;
     decltype(auto) pop_front() { return fifo.pop_front(); }
 
     decltype(auto) push_back(const Value& v) { return fifo.push_back(v); }
+
+    template <typename... Args>
+    decltype(auto) emplace_back(Args&&... args)
+    {
+      return fifo.emplace_back(std::forward<Args>(args)...);
+    }
 
     bool fifo_empty() const { return fifo.empty(); }
     bool empty() const { return num_orders == 0; }
@@ -46,6 +55,10 @@ class LevelMap
   decltype(auto) rbegin() { return fifo_map.rbegin(); }
 
   decltype(auto) rend() { return fifo_map.rend(); }
+
+  decltype(auto) crbegin() const { return fifo_map.crbegin(); }
+
+  decltype(auto) crend() const { return fifo_map.crend(); }
 
   bool empty() const { return num_orders == 0; }
 
@@ -93,8 +106,9 @@ class LevelMap
   size_t num_orders;
 };
 
-using MinLevelMap = LevelMap<order::price_t, order::Order, std::less>;
+using MinLevelMap =
+    LevelMap<order::price_t, order::Order, std::deque, std::less>;
 
-};  // namespace levelmap
+}  // namespace levelmap
 
 #endif  // ORDER_BOOK_LEVEL_MAP_H_

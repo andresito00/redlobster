@@ -74,7 +74,7 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
     return std::make_unique<PrintAction>();
 
   } else if (type == "O") {
-    uint32_t oid;
+    order::oid_t oid;
     astream >> oid;
 
     std::string symbol;
@@ -88,16 +88,16 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
     order::OrderSide side =
         (side_char == 'B') ? order::OrderSide::kBuy : order::OrderSide::kSell;
 
-    uint16_t qty;
+    order::qty_t qty;
     astream >> qty;
 
-    double price;
+    order::price_t price;
     astream >> price;
     return std::make_unique<PlaceOrderAction>(
         oid, symbol, order::Order{oid, symbol, side, qty, price});
 
   } else if (type == "X") {
-    uint32_t oid;
+    order::oid_t oid;
     astream >> oid;
     return std::make_unique<CancelOrderAction>(oid);
   }

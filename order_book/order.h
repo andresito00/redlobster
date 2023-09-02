@@ -53,6 +53,6 @@ struct OrderResult {
   std::list<std::string> serialize() const;
 };
 
-};  // namespace order
+}  // namespace order
 
 #endif  // ORDER_BOOK_ORDER_H_
