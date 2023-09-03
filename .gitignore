@@ -8,3 +8,4 @@ __pycache__
 *.cmake
 .vscode
 valgrind-out.txt
+gen_actions.txt
