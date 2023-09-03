@@ -104,7 +104,7 @@ std::vector<fifo_idx_t> OrderBook::place_orders(
   return result;
 }
 
-void OrderBook::kill_order(Order &order)
+void OrderBook::kill_order(const Order &order)
 {
   auto &levels = (order.side == OrderSide::kBuy) ? buy_orders_ : sell_orders_;
   levels.kill_order(order.price, order.idx);

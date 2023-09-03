@@ -13,14 +13,32 @@
 namespace order
 {
 
+/**
+ * There will be one OrderBook per symbol
+*/
 class OrderBook
 {
  public:
   OrderBook() = default;
+
+  /**
+   * Attempts to match an inbound Order (buy or sell),
+   * if a viable candidate is not found the order is placed
+   * in one of buy_orders_ or sell_orders_ to be matched later.
+  */
   fifo_idx_t place_order(Order* order, OrderResult* result);
+
+  /**
+   * Not really used outside of tests, but should be able to batch orders.
+  */
   std::vector<fifo_idx_t> place_orders(std::vector<Order>* orders,
                                        std::vector<OrderResult>* results);
-  void kill_order(Order& order);
+
+  /**
+   * 0-out the quantity for an order in the book using its information
+   * from the order_lut_
+  */
+  void kill_order(const Order& order);
   inline const levelmap::MinLevelMap& get_sell_orders() const
   {
     return sell_orders_;
@@ -29,6 +47,12 @@ class OrderBook
   {
     return buy_orders_;
   }
+
+  /**
+   * Below are the various ways we can probe
+   * an order book's physical size in memory as
+   * well as our count of the internal Order.qty values
+  */
   inline size_t buy_order_count() const noexcept
   {
     return buy_orders_.order_count();
@@ -79,6 +103,9 @@ class OrderBook
   levelmap::MinLevelMap sell_orders_;
 };
 
+/**
+ * A BookMap owns one OrderBook per Symbol
+*/
 class BookMap
 {
  public:
@@ -89,11 +116,13 @@ class BookMap
  private:
   // book_map_ is where we find the real orders that are in flight
   std::unordered_map<symbol_t, OrderBook> book_map_;
-  // order_lut_ is the rosetta stone for finding an order in the
-  // book_map_, basically using all of that order's internal information.
-  // order_lut_ may be used to query information about the order EXCEPT
-  // QUANTITY. QUANTITY IS STALE FROM THE MOMENT THE ORDER WAS PLACED
-  // IN THE LIMIT ORDER QUEUE.
+  /**
+   * order_lut_ is the rosetta stone for finding an order in the
+   * book_map_, basically using all of that order's internal information.
+   * order_lut_ may be used to query information about the order EXCEPT
+   * QUANTITY. QUANTITY IS STALE FROM THE MOMENT THE ORDER WAS PLACED
+   * IN THE LIMIT ORDER QUEUE.
+  */
   std::unordered_map<oid_t, Order> order_lut_;
 };
 
