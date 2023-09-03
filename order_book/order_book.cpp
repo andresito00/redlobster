@@ -119,18 +119,14 @@ OrderResult BookMap::handle_order(Order *order)
                        std::to_string(curr_oid) + " Duplicate order id",
                        {}};
   }
-  // reserve while in flight...
-  order_lut_[curr_oid];
   OrderResult result{};
   auto dq_idx = book_map_[order->symbol].place_order(order, &result);
   if (dq_idx != kMaxDQIdx) {
-    order_lut_[curr_oid] = *order;
-    return result;
+    order_lut_.emplace(curr_oid, std::move(*order));
   } else if (book_map_[order->symbol].empty()) {
     book_map_.erase(order->symbol);
-    // TODO(andres): erase from symbol registry
+    // TODO(andres): erase from symbol registry if/when I implement
   }
-  order_lut_.erase(curr_oid);
   return result;
 }
 

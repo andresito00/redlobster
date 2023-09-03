@@ -87,7 +87,13 @@ class BookMap
   std::list<std::string> serialize();
 
  private:
-  std::unordered_map<std::string, OrderBook> book_map_;
+  // book_map_ is where we find the real orders that are in flight
+  std::unordered_map<symbol_t, OrderBook> book_map_;
+  // order_lut_ is the rosetta stone for finding an order in the
+  // book_map_, basically using all of that order's internal information.
+  // order_lut_ may be used to query information about the order EXCEPT
+  // QUANTITY. QUANTITY IS STALE FROM THE MOMENT THE ORDER WAS PLACED
+  // IN THE LIMIT ORDER QUEUE.
   std::unordered_map<oid_t, Order> order_lut_;
 };
 
