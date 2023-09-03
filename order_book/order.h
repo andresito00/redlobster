@@ -1,6 +1,7 @@
 #ifndef ORDER_BOOK_ORDER_H_
 #define ORDER_BOOK_ORDER_H_
 #include <string>
+#include <list>
 #include <vector>
 #include <queue>
 #include <numeric>
@@ -32,8 +33,7 @@ struct Order {
   price_t price;
   fifo_idx_t idx;
   Order();
-  Order(oid_t oid, std::string symbol, OrderSide side, qty_t qty,
-        price_t price);
+  Order(oid_t oid, symbol_t symbol, OrderSide side, qty_t qty, price_t price);
   ~Order() = default;
   Order(const Order& other);
   Order(Order&& other);

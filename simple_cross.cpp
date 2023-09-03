@@ -18,9 +18,9 @@ struct OrderAction : public Action {
 };
 
 struct PlaceOrderAction : public OrderAction {
-  std::string symbol;
+  order::symbol_t symbol;
   order::Order order;
-  PlaceOrderAction(uint32_t oid, std::string symbol, order::Order order)
+  PlaceOrderAction(uint32_t oid, order::symbol_t symbol, order::Order order)
       : OrderAction(oid), symbol(symbol), order(order)
   {
   }
@@ -80,7 +80,7 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
     order::oid_t oid;
     astream >> oid;
 
-    std::string symbol;
+    order::symbol_t symbol;
     astream >> symbol;
 
     char side_char;

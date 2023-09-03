@@ -12,10 +12,11 @@ const extern order::qty_t kDefaultOrderQty;
 
 order::Order generate_dummy_order(
     order::oid_t oid, order::qty_t qty,
-    order::OrderSide side = order::OrderSide::kBuy, std::string symbol = "IBM");
-std::vector<order::Order> generate_dummy_n_orders(size_t n, order::oid_t start,
-                                                  order::qty_t qty = 10,
-                                                  std::string symbol = "IBM");
+    order::OrderSide side = order::OrderSide::kBuy,
+    order::symbol_t symbol = "IBM");
+std::vector<order::Order> generate_dummy_n_orders(
+    size_t n, order::oid_t start, order::qty_t qty = 10,
+    order::symbol_t symbol = "IBM");
 std::vector<order::Order> generate_asc_desc_full_fills(
     size_t n, order::oid_t start, order::qty_t qty = kDefaultOrderQty);
 std::vector<order::Order> generate_asc_asc_full_fills(

@@ -1,7 +1,6 @@
 #include <string>
 #include <functional>
 #include <stdexcept>
-#include <iostream>
 #include "order_book.h"
 #include "order.h"
 

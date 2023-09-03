@@ -15,7 +15,7 @@ Order::Order()
     : oid(kMaxOID), side(OrderSide::kBuy), qty(0), price(0.0), idx(kMaxDQIdx)
 {
 }
-Order::Order(uint32_t oid, std::string symbol, OrderSide side, uint16_t qty,
+Order::Order(oid_t oid, symbol_t symbol, OrderSide side, qty_t qty,
              price_t price)
     : oid(oid),
       symbol(symbol),

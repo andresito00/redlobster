@@ -10,14 +10,14 @@ constexpr size_t kDefaultTestPrice = 100.0;
 constexpr order::qty_t kDefaultOrderQty = 10;
 
 order::Order generate_dummy_order(order::oid_t oid, order::qty_t qty,
-                                  order::OrderSide side, std::string symbol)
+                                  order::OrderSide side, order::symbol_t symbol)
 {
   return order::Order{oid, symbol, side, qty, kDefaultTestPrice};
 }
 
 std::vector<order::Order> generate_dummy_n_orders(size_t n, order::oid_t start,
                                                   order::qty_t qty,
-                                                  std::string symbol)
+                                                  order::symbol_t symbol)
 {
   std::vector<order::Order> result;
   result.resize(n);
