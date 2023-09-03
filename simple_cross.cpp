@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <order_book.h>
 #include <order.h>
+#include <log.h>
 #include "simple_cross.h"
 
 static std::unordered_set<std::string> kAllowableActionTokens{"O", "X", "P"};
@@ -66,11 +67,14 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
   std::string type;
   astream >> type;
   if (!kAllowableActionTokens.count(type)) {
-    throw std::runtime_error("Invalid action: " + type);
+    LOG_ERROR("Invalid action: " + action_string);
   }
 
   if (type == "P") {
-    return std::make_unique<PrintAction>();
+    if (action_string.size() == 1) {
+      return std::make_unique<PrintAction>();
+    }
+    LOG_ERROR("Invalid Print Action request size: " + action_string);
 
   } else if (type == "O") {
     order::oid_t oid;
@@ -82,13 +86,20 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
     char side_char;
     astream >> side_char;
     if (!kAllowableSides.count(side_char)) {
-      throw std::runtime_error("Invalid order side: " + type);
+      LOG_ERROR(std::to_string(oid) + " Invalid order side: " + type);
+      return std::make_unique<Action>();
     }
+
     order::OrderSide side =
         (side_char == 'B') ? order::OrderSide::kBuy : order::OrderSide::kSell;
 
     order::qty_t qty;
     astream >> qty;
+    if (qty == 0) {
+      LOG_ERROR(std::to_string(oid) +
+                " Invalid quantity: " + std::to_string(qty));
+      return std::make_unique<Action>();
+    }
 
     order::price_t price;
     astream >> price;

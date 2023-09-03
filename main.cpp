@@ -141,7 +141,8 @@ int main(int argc, char *argv[])
   (void)argv;
   SimpleCross scross;
   std::string line;
-  while (std::getline(std::cin, line)) {
+  std::ifstream actions("actions.txt", std::ios::in);
+  while (std::getline(actions, line)) {
     results_t results = scross.action(line);
     for (results_t::const_iterator it = results.begin(); it != results.end();
          ++it) {

@@ -11,6 +11,10 @@ The implementation is designed to support 3 actions:
     - Offers from highest to lowest price
     - Within price levels, I print oldest to youngest.
 
+The implementation must flag invalid input:
+- Print errors starting with "E [OID]"
+- Duplicate OIDs are an error, though I am interpreting this to mean that we only care about dups when they are on the book, after an order has been filled its OID should be available for subsequent orders.
+
 ### Workload Assumptions, Operations, and Complexity
 - There are "relatively few" ticker symbols with extremely high amounts of activity.
 - Their OrderBooks have long FIFOs of orders.

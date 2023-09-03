@@ -3,21 +3,28 @@
 #include <iostream>
 #include <string>
 
-static inline void log(std::string file, int line, std::string msg,
-                       std::ostream& out = std::cout)
+static inline void trace_log(std::string file, int line, std::string msg,
+                             std::ostream& out = std::cout)
 {
   out << file << ": " << line << ": " << msg << '\n';
 }
 
-static inline std::string log_str(std::string file, int line, std::string msg)
+static inline std::string trace_log_str(std::string file, int line,
+                                        std::string msg)
 {
   return std::string(file) + ": " + std::to_string(line) + ": " +
          std::string(msg);
 }
 
-#define LOG(x) log(__FILE__, __LINE__, x)
-#define LOG_STRING(x) log_str(__FILE__, __LINE__, x)
-#define LOG_OSTREAM(x, y) log(__FILE__, __LINE__, x, y)
-#define LOG_ERROR(x) LOG_OSTREAM(x, std::cerr)
+static inline void log_err(std::string msg, std::ostream& out = std::cout)
+{
+  out << "E " << msg << '\n';
+}
+
+#define LOG_ERROR(x) log_err(x)
+
+#define TRACE_LOG(x) trace_log(__FILE__, __LINE__, x)
+#define TRACE_LOG_STRING(x) trace_log_str(__FILE__, __LINE__, x)
+#define TRACE_LOG_OSTREAM(x, y) trace_log(__FILE__, __LINE__, x, y)
 
 #endif  // UTIL_LOG_H_
