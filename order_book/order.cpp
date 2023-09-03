@@ -6,10 +6,11 @@
 
 namespace order
 {
-
-constexpr qty_t kMaxOrders = std::numeric_limits<order::qty_t>::max();
+constexpr uint8_t kPrintPrecision = 5U;
+constexpr qty_t kMaxQuantity = std::numeric_limits<order::qty_t>::max();
 constexpr oid_t kMaxOID = std::numeric_limits<oid_t>::max();
 constexpr fifo_idx_t kMaxDQIdx = std::numeric_limits<fifo_idx_t>::max();
+constexpr size_t kMaxSymbolSize = 8;
 
 Order::Order()
     : oid(kMaxOID), side(OrderSide::kBuy), qty(0), price(0.0), idx(kMaxDQIdx)
@@ -101,8 +102,7 @@ std::string Order::str(char prepend, bool print_side) const
   }
   order_stream << qty << ' ';
   std::stringstream price_stream;
-  price_stream << std::setw(13) << std::setfill('0') << std::fixed
-               << std::setprecision(5) << price;
+  price_stream << std::fixed << std::setprecision(kPrintPrecision) << price;
   return order_stream.str() + price_stream.str();
 }
 

@@ -6,3 +6,4 @@
 ./build/test_full_fills_asc_desc
 ./build/test_full_fills_asc_asc
 ./build/test_find_oid_after_many_pushes
+python3 ./test/gen_actions.py | ./build/simple_cross

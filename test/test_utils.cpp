@@ -5,7 +5,7 @@
 #include <string>
 #include "test_utils.h"
 
-extern const order::qty_t kMaxOrders;
+extern const order::qty_t kMaxQuantity;
 constexpr size_t kDefaultTestPrice = 100.0;
 constexpr order::qty_t kDefaultOrderQty = 10;
 

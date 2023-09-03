@@ -21,9 +21,10 @@ using price_t = double;
 using fifo_idx_t = uint32_t;
 using symbol_t = std::string;
 
-const extern qty_t kMaxOrders;
+const extern qty_t kMaxQuantity;
 const extern oid_t kMaxOID;
 const extern fifo_idx_t kMaxDQIdx;
+const extern size_t kMaxSymbolSize;
 
 struct Order {
   oid_t oid;

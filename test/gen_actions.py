@@ -19,10 +19,13 @@ class AlwaysValidOID:
 
 avo = AlwaysValidOID()
 
+QTY_MAX = 0x10000 - 1
+
 
 def create_action(symbol: str, price: float) -> str:
-    ask_or_offer = random.choice(["B", "S"])
-    return f"O {avo.get()} {symbol} {ask_or_offer} 10 {price:.5f}"
+    ask_or_offer: str = random.choice(["B", "S"])
+    qty: int = np.random.randint(0, QTY_MAX)
+    return f"O {avo.get()} {symbol} {ask_or_offer} {qty} {price:7.5f}"
 
 
 async def main(num_symbols: int, num_actions: int):
@@ -45,14 +48,17 @@ async def main(num_symbols: int, num_actions: int):
     )
     writer = asyncio.StreamWriter(w_transport, w_protocol, None, loop)
     per_symbol_sigma = 0.25
-    for i in range(num_actions * num_symbols):
-        key = random.choice(list(price_map.keys()))
-        # Use an async generator and async prints if this gets slow...
-        s: np.ndarray = np.random.normal(price_map[key], per_symbol_sigma, 1)
-        writer.write((create_action(key, s[0]) + "\n").encode("utf-8"))
+    with open("generated_actions.txt", "wb") as f:
+        for i in range(num_actions * num_symbols):
+            key = random.choice(list(price_map.keys()))
+            # Use an async generator and async prints if this gets slow...
+            s: np.ndarray = np.random.normal(price_map[key], per_symbol_sigma, 1)
+            test_string: str = (create_action(key, s[0]) + "\n").encode("utf-8")
+            writer.write(test_string)
+            await writer.drain()
+            f.write(test_string)
+        writer.write("P\n".encode("utf-8"))
         await writer.drain()
-    writer.write("P\n")
-    await writer.drain()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 #include <unordered_map>
 #include <sstream>
+#include <iomanip>
 #include <algorithm>
 #include <memory>
 #include <cctype>
@@ -13,6 +14,7 @@
 static std::unordered_set<std::string> kAllowableActionTokens{"O", "X", "P"};
 static std::unordered_set<char> kAllowableSides{'B', 'S'};
 static size_t kInvalidSubstringSize = 10LU;
+static order::price_t kMaxPrice = 9999999.99999;
 
 struct OrderAction : public Action {
   explicit OrderAction(uint32_t oid) : oid(oid) {}
@@ -60,11 +62,21 @@ bool is_whitespace(const std::string& line)
   });
 }
 
-bool valid_symbol(const order::symbol_t& sym)
+inline bool valid_symbol(const order::symbol_t& sym)
 {
+  if (sym.size() == 0 || sym.size() > order::kMaxSymbolSize) {
+    return false;
+  }
   return std::find_if(sym.cbegin(), sym.cend(), [](const auto& c) {
            return !std::isalnum(c);
          }) == sym.end();
+}
+
+inline bool valid_qty_format(const std::string& qty_str)
+{
+  return std::find_if(qty_str.cbegin(), qty_str.cend(), [](const auto& c) {
+           return !std::isdigit(c);
+         }) == qty_str.end();
 }
 
 std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
@@ -113,22 +125,31 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
     order::OrderSide side =
         (side_char == 'B') ? order::OrderSide::kBuy : order::OrderSide::kSell;
 
-    order::qty_t qty;
-    astream >> qty;
-    if (qty == 0) {
+    std::string qty_str;
+    astream >> qty_str;
+    if (!valid_qty_format(qty_str)) {
+      LOG_ERROR(
+          std::to_string(oid) + " Invalid quantity format: " +
+          qty_str.substr(0, std::max(qty_str.size(), kInvalidSubstringSize)));
+      return std::make_unique<Action>();
+    }
+    size_t qty = std::stoul(qty_str);
+    if (qty == 0 || qty > order::kMaxQuantity) {
       LOG_ERROR(std::to_string(oid) +
-                " Invalid quantity: " + std::to_string(qty));
+                " Quantity out of valid range: " + std::to_string(qty));
       return std::make_unique<Action>();
     }
 
-    order::price_t price;
-    astream >> price;
-    if (price <= 0.0) {
-      LOG_ERROR(std::to_string(oid) + " Price <= 0 ");
+    std::string price_str;
+    astream >> price_str;
+    order::price_t price = std::stod(price_str);
+    if (price <= 0.0 || price > kMaxPrice) {
+      LOG_ERROR(std::to_string(oid) + " Price <= 0 || > 9999999.99999 ");
       return std::make_unique<Action>();
     }
     return std::make_unique<PlaceOrderAction>(
-        oid, symbol, order::Order{oid, symbol, side, qty, price});
+        oid, symbol,
+        order::Order{oid, symbol, side, static_cast<order::qty_t>(qty), price});
 
   } else if (type == "X") {
     order::oid_t oid;
