@@ -1,5 +1,6 @@
 #include <unordered_map>
 #include <sstream>
+#include <algorithm>
 #include <memory>
 #include <cctype>
 #include <functional>
@@ -58,6 +59,13 @@ bool is_whitespace(const std::string& line)
   });
 }
 
+bool valid_symbol(const order::symbol_t& sym)
+{
+  return std::find_if(sym.cbegin(), sym.cend(), [](const auto& c) {
+           return !std::isalnum(c);
+         }) == sym.end();
+}
+
 std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
 {
   if (action_string.size() == 0 || is_whitespace(action_string)) {
@@ -75,6 +83,7 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
       return std::make_unique<PrintAction>();
     }
     LOG_ERROR("Invalid Print Action request size: " + action_string);
+    return std::make_unique<Action>();
 
   } else if (type == "O") {
     order::oid_t oid;
@@ -82,6 +91,10 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
 
     order::symbol_t symbol;
     astream >> symbol;
+    if (!valid_symbol(symbol)) {
+      LOG_ERROR("Invalid Symbol: " + symbol);
+      return std::make_unique<Action>();
+    }
 
     char side_char;
     astream >> side_char;

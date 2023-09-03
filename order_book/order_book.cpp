@@ -73,8 +73,7 @@ fifo_idx_t OrderBook::place_order(Order *order, OrderResult *result)
   auto book_levels =
       (order->side == order::OrderSide::kBuy) ? &buy_orders_ : &sell_orders_;
   result->type = ResultType::kFilled;
-  if (auto remaining_qty =
-          update_book(search_levels, compare_fn, order, result)) {
+  if (update_book(search_levels, compare_fn, order, result)) {
     auto price = order->price;
     auto next_idx =
         static_cast<fifo_idx_t>(book_levels->fifo_size_with_key(price));
@@ -177,13 +176,15 @@ OrderResult BookMap::cancel_order(const oid_t oid)
       ResultType::kError, "Invalid OID: " + std::to_string(oid), {}};
 }
 
-std::list<std::string> get_order_strings(std::deque<Order> *fifo, char prepend)
+std::list<std::string> get_order_strings(std::deque<Order> *fifo, char prepend,
+                                         bool cull_zero_qty)
 {
   std::list<std::string> result;
   for (auto &o : *fifo) {
-    if (o.qty) {
-      result.emplace_back(o.str(prepend));
+    if (o.qty == 0 && cull_zero_qty) {
+      continue;
     }
+    result.emplace_back(o.str(prepend));
   }
   return result;
 }
@@ -197,13 +198,13 @@ std::list<std::string> serialize_book(OrderBook &book, char prepend)
   for (auto it = sells.crbegin(); it != sells.crend(); ++it) {
     auto ofifo = it->second;
     sell_strings.splice(sell_strings.end(),
-                        get_order_strings(&ofifo.fifo, prepend));
+                        get_order_strings(&ofifo.fifo, prepend, true));
   }
   auto buys = book.get_buy_orders();
   for (auto it = buys.crbegin(); it != buys.crend(); ++it) {
     auto ofifo = it->second;
     buy_strings.splice(buy_strings.end(),
-                       get_order_strings(&ofifo.fifo, prepend));
+                       get_order_strings(&ofifo.fifo, prepend, true));
   }
   result.splice(result.end(), sell_strings);
   result.splice(result.end(), buy_strings);

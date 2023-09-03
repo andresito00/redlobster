@@ -132,9 +132,6 @@ class BookMap
   std::unordered_map<oid_t, Order> order_lut_;
 };
 
-std::list<std::string> get_order_strings(std::deque<Order>& fifo, bool prepend);
-std::list<std::string> serialize_book(OrderBook& book, char prepend);
-
 }  // namespace order
 
 #endif  // ORDER_BOOK_ORDER_BOOK_H_
