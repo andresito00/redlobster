@@ -22,7 +22,8 @@ int main(int argc, char *argv[])
   std::string ofile = std::string(argv[0]) + ".log";
   std::ofstream ostream(ofile, std::ios::out);
 
-  auto orders = generate_asc_desc_full_fills(0x10000, 0);
+  constexpr size_t num_order_objects = 0x10000;
+  auto orders = generate_asc_desc_full_fills(num_order_objects, 0);
 
   order::OrderBook test_book{};
   std::vector<order::OrderResult> results{};
@@ -30,6 +31,7 @@ int main(int argc, char *argv[])
   test_book.place_orders(&orders, &results);
 
   assertm(test_book.empty(), "Expected all orders to be filled...");
+  assertm(test_book.fifos_size() == 0, "Expected all orders to be filled...");
 
   return 0;
 }

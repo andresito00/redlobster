@@ -39,6 +39,12 @@ class OrderBook
    * from the order_lut_
   */
   void kill_order(const Order& order);
+
+  /**
+   * Returns the best offer and the best ask
+  */
+  std::pair<price_t, price_t> get_spread();
+
   inline const levelmap::MinLevelMap& get_sell_orders() const
   {
     return sell_orders_;

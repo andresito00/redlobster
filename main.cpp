@@ -134,7 +134,7 @@ F 10008 IBM 3 102.00000
 #include <iostream>
 #include "simple_cross.h"
 
-#ifndef STDIN
+#if !defined(STDIN)
 #define WHILE_GETLINE(x)                              \
   std::ifstream actions("actions.txt", std::ios::in); \
   while (std::getline(actions, x))

@@ -120,7 +120,7 @@ class LevelMap
     num_orders_ -= count;
   }
 
-  void kill_order(order::price_t price, order::fifo_idx_t idx)
+  void zero_out_order(order::price_t price, order::fifo_idx_t idx)
   {
     OQueue* level = &fifo_map_[price];
     dec_counts(level, level->fifo[idx].qty);

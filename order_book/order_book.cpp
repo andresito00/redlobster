@@ -104,12 +104,20 @@ std::vector<fifo_idx_t> OrderBook::place_orders(
   return result;
 }
 
-void OrderBook::kill_order(const Order &order)
+/**
+ * Locates the order we need to kill then 0s out the quantity.
+*/
+void OrderBook::kill_order(const Order &reference_order_data)
 {
-  auto &levels = (order.side == OrderSide::kBuy) ? buy_orders_ : sell_orders_;
-  levels.kill_order(order.price, order.idx);
+  auto &levels = (reference_order_data.side == OrderSide::kBuy) ? buy_orders_
+                                                                : sell_orders_;
+  levels.zero_out_order(reference_order_data.price, reference_order_data.idx);
 }
 
+/**
+ * handle_order dispatches an inbound order
+ * Returns a kError
+*/
 OrderResult BookMap::handle_order(Order *order)
 {
   // check for dups
@@ -117,6 +125,11 @@ OrderResult BookMap::handle_order(Order *order)
   if (order_lut_.count(curr_oid)) {
     return OrderResult{ResultType::kError,
                        std::to_string(curr_oid) + " Duplicate order id",
+                       {}};
+  }
+  if (order->price == 0.0) {
+    return OrderResult{ResultType::kError,
+                       std::to_string(curr_oid) + " Invalid limit price: 0",
                        {}};
   }
   OrderResult result{};

@@ -21,14 +21,14 @@ int main(int argc, char* argv[])
   (void)argc;
   std::string ofile = std::string(argv[0]) + ".log";
   std::ofstream ostream(ofile, std::ios::out);
-  constexpr size_t kNumOrders = 1024;
-  constexpr size_t kOrderQty = 10LU;
+  constexpr size_t num_orders = 1024;
+  constexpr size_t order_quantity = 10LU;
 
-  auto dummy_buys = generate_dummy_n_orders(kNumOrders, 0, kOrderQty);
+  auto dummy_buys = generate_dummy_n_orders(num_orders, 0, order_quantity);
   std::vector<order::OrderResult> results;
-  results.resize(kNumOrders);
+  results.resize(num_orders);
   order::OrderBook test_book{};
-  // * 1. Add kNumOrders or the order book
+  // * 1. Add num_orders or the order book
   test_book.place_orders(&dummy_buys, &results);
   // * 2. Kill them all
   for (auto& d : dummy_buys) {
@@ -41,8 +41,8 @@ int main(int argc, char* argv[])
                           std::to_string(test_book.order_count()));
   assertm(test_book.empty(), assert_str1.c_str());
   std::string assert_str2("Expected FIFOs size == " +
-                          std::to_string(kNumOrders));
-  assertm(test_book.fifos_size() == kNumOrders, assert_str2.c_str());
+                          std::to_string(num_orders));
+  assertm(test_book.fifos_size() == num_orders, assert_str2.c_str());
 
   order::Order dummy_order{24, "IBM", order::OrderSide::kSell, 10, 99.00};
   order::OrderResult result{};

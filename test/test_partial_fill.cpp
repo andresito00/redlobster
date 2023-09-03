@@ -14,10 +14,11 @@ int main(int argc, char *argv[])
   std::string ofile = std::string(argv[0]) + ".log";
   std::ofstream ostream(ofile, std::ios::out);
 
-  constexpr size_t kOrderQty = 10LU;
-  auto dummy_buy = generate_dummy_order(0, kOrderQty, order::OrderSide::kBuy);
+  constexpr size_t order_quantity = 10LU;
+  auto dummy_buy =
+      generate_dummy_order(0, order_quantity, order::OrderSide::kBuy);
   auto dummy_sell =
-      generate_dummy_order(1, kOrderQty / 2, order::OrderSide::kSell);
+      generate_dummy_order(1, order_quantity / 2, order::OrderSide::kSell);
   order::OrderResult result;
 
   order::OrderBook test_book{};
@@ -30,8 +31,10 @@ int main(int argc, char *argv[])
           "Expected sell order first");
   assertm(result.orders[1].side == order::OrderSide::kBuy,
           "Expected buy order second");
-  assertm(result.orders[0].qty == kOrderQty / 2, "Expected half filled order");
-  assertm(result.orders[1].qty == kOrderQty / 2, "Expected half filled order");
+  assertm(result.orders[0].qty == order_quantity / 2,
+          "Expected half filled order");
+  assertm(result.orders[1].qty == order_quantity / 2,
+          "Expected half filled order");
 
   return 0;
 }
