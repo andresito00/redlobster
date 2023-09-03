@@ -3,7 +3,7 @@ project(simple-cross-exe)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG") # need symbols for gdb
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wpedantic")
@@ -20,14 +20,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat=2")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 if(CMAKE_CXX_COMPILER STREQUAL "clang++")
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wbinding-in-condition")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wduplicate-enum")
 endif()
 
-if(CMAKE_EXPORT_COMPILE_COMMANDS)
-    set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
-endif()
-set(CMAKE_CXX_CLANG_TIDY clang-tidy -fix -checks=google-*,clang-analyzer-*,-header-filter=.*)
+# if(CMAKE_EXPORT_COMPILE_COMMANDS)
+#     set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
+# endif()
+# set(CMAKE_CXX_CLANG_TIDY clang-tidy -fix -checks=google-*,clang-analyzer-*,-header-filter=.*)
 
 include_directories(order_book/)
 include_directories(util/)
@@ -50,8 +51,8 @@ target_link_libraries(test_kill_to_empty PRIVATE order test_utils)
 add_executable(test_partial_fill test/test_partial_fill.cpp )
 target_link_libraries(test_partial_fill PRIVATE order test_utils)
 
-add_executable(test_full_fills_only test/test_full_fills_only.cpp )
-target_link_libraries(test_full_fills_only PRIVATE order test_utils)
+add_executable(test_full_fills_asc_desc test/test_full_fills_asc_desc.cpp )
+target_link_libraries(test_full_fills_asc_desc PRIVATE order test_utils)
 
 enable_testing()
 add_test(NAME tests
