@@ -16,36 +16,35 @@ static qty_t update_book(levelmap::MinLevelMap *search_levels,
 {
   auto remaining_qty = order->qty;
   while (!search_levels->fifos_empty() && remaining_qty > 0) {
-    auto &[price, _] = search_levels->get_first_level(order);
+    auto &[price, level] = search_levels->get_first_level(order);
     if (!meets_price_req(price, order->price)) {
       // all following prices will exceed/fall below the req
       break;
     }
 
-    while (!search_levels->level_empty(price) && remaining_qty > 0) {
-      auto &candidate = search_levels->front_with_key(price);
+    while (level.size() != 0 && remaining_qty > 0) {
+      auto &candidate = level.front();
       if (candidate.qty > 0) {
         auto min_fill = std::min(candidate.qty, remaining_qty);
-        auto inbound_filled = *order;
-        auto outbound_filled = candidate;
-        inbound_filled.qty = min_fill;
-        inbound_filled.price = price;  // fill price might change for inbound
-        outbound_filled.qty = min_fill;
-
-        result->orders.emplace_back(std::move(inbound_filled));
-        result->orders.emplace_back(std::move(outbound_filled));
+        result->orders.emplace_back(order->oid, order->symbol, order->side,
+                                    min_fill, price);
+        result->orders.emplace_back(candidate.oid, candidate.symbol,
+                                    candidate.side, min_fill, price);
         candidate.qty -= min_fill;
         remaining_qty -= min_fill;
-        search_levels->dec_counts(price, min_fill);
+        search_levels->dec_counts(level, min_fill);
       }
 
       if (candidate.qty == 0) {
         // candidate order has been exhausted, or was previously cancelled
-        search_levels->pop_front_with_key(price);
+        level.pop_front();
+        // The price we pay for not looping over our FIFOs to determine
+        // element count...
+        search_levels->dec_size();
       }
     }
 
-    if (search_levels->level_empty(price)) {
+    if (level.empty()) {
       // This is where we do our clean-up.
       // If the total QTY COUNTS are 0 we can erase the price level.
       //
@@ -79,10 +78,9 @@ fifo_idx_t OrderBook::place_order(Order *order, OrderResult *result)
           update_book(search_levels, compare_fn, order, result)) {
     auto price = order->price;
     auto next_idx =
-        static_cast<fifo_idx_t>((*book_levels).fifo_size_with_key(price));
+        static_cast<fifo_idx_t>(book_levels->fifo_size_with_key(price));
     order->idx = next_idx;
-    (*book_levels).push_back_with_key(price, *order);
-    (*book_levels).inc_counts(price, remaining_qty);
+    book_levels->push_back_with_key(price, *order);
     return next_idx;
   }
   return kMaxDQIdx;
@@ -99,6 +97,8 @@ std::vector<fifo_idx_t> OrderBook::place_orders(
   std::vector<fifo_idx_t> result;
   result.reserve(n);
   for (size_t i = 0; i < n; ++i) {
+    // TODO(andres): This is hideous. Consider just using arrays as this is pretty
+    // much only test code at this point.
     result.push_back(place_order(&(*orders)[i], &(*results)[i]));
   }
   return result;

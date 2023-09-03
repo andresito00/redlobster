@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
   (void)argc;
   std::string ofile = std::string(argv[0]) + ".log";
   std::ofstream ostream(ofile, std::ios::out);
-  const size_t kNumOrders = kMaxOrders;
+  constexpr size_t kNumOrders = 1024;
   constexpr size_t kOrderQty = 10LU;
 
   auto dummy_buys = generate_dummy_n_orders(kNumOrders, 0, kOrderQty);

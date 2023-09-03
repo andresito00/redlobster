@@ -25,7 +25,7 @@ class LevelMap
     size_t num_orders;
     FifoContainer<Value, std::allocator<Value>> fifo;
 
-    void pop_front() { return fifo.pop_front(); }
+    void pop_front() { fifo.pop_front(); }
 
     decltype(auto) front() { return fifo.front(); }
 
@@ -65,6 +65,8 @@ class LevelMap
     return fifo_map_.at(k).pop_front();
   }
 
+  void dec_size() { --total_fifos_size_; }
+
   decltype(auto) front_with_key(const Key& k)
   {
     return fifo_map_.at(k).front();
@@ -72,8 +74,10 @@ class LevelMap
 
   decltype(auto) push_back_with_key(const Key& k, const Value& v)
   {
+    OQueue* level = &fifo_map_[k];
+    inc_counts(level, v.qty);
     ++total_fifos_size_;
-    return fifo_map_[k].push_back(v);
+    return level->push_back(v);
   }
 
   size_t order_count() const noexcept { return num_orders_; }
@@ -98,22 +102,29 @@ class LevelMap
 
   bool fifos_empty() const { return fifos_size() == 0; }
 
-  void inc_counts(order::price_t price, size_t count)
+  void inc_counts(OQueue* level, size_t count)
   {
-    fifo_map_[price].num_orders += count;
+    level->num_orders += count;
     num_orders_ += count;
   }
 
-  void dec_counts(order::price_t price, size_t count)
+  void dec_counts(OQueue& level, size_t count)
   {
-    fifo_map_[price].num_orders -= count;
+    level.num_orders -= count;
     num_orders_ -= count;
   }
 
-  void kill_order(order::price_t price, size_t idx)
+  void dec_counts(OQueue* level, size_t count)
   {
-    dec_counts(price, fifo_map_.at(price).fifo[idx].qty);
-    fifo_map_[price].fifo[idx].qty = 0;
+    level->num_orders -= count;
+    num_orders_ -= count;
+  }
+
+  void kill_order(order::price_t price, order::fifo_idx_t idx)
+  {
+    OQueue* level = &fifo_map_[price];
+    dec_counts(level, level->fifo[idx].qty);
+    level->fifo[idx].qty = 0;
   }
 
   /**
@@ -127,6 +138,8 @@ class LevelMap
   */
   decltype(auto) erase(const Key& k)
   {
+    // We may be erasing a FIFO that reports 0-qty but has
+    // Order objects inside, nevertheless.
     total_fifos_size_ -= fifo_map_.at(k).size();
     return fifo_map_.erase(k);
   }

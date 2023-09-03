@@ -18,6 +18,8 @@ using oid_t = uint32_t;
 using qty_t = uint16_t;
 using price_t = double;
 using fifo_idx_t = uint32_t;
+
+const extern qty_t kMaxOrders;
 const extern oid_t kMaxOID;
 const extern fifo_idx_t kMaxDQIdx;
 

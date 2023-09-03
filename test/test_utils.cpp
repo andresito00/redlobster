@@ -2,19 +2,21 @@
 #include <order_book.h>
 #include <order.h>
 #include <vector>
+#include <string>
 #include "test_utils.h"
 
-constexpr size_t kMaxOrders = std::numeric_limits<uint16_t>::max();
-constexpr size_t kDefaultPrice = std::numeric_limits<uint16_t>::max();
+extern const order::qty_t kMaxOrders;
+constexpr size_t kDefaultTestPrice = 100.0;
 
 order::Order generate_dummy_order(order::oid_t oid, order::qty_t qty,
-                                  order::OrderSide side)
+                                  order::OrderSide side, std::string symbol)
 {
-  return order::Order{oid, "IBM", side, qty, kDefaultPrice};
+  return order::Order{oid, symbol, side, qty, kDefaultTestPrice};
 }
 
 std::vector<order::Order> generate_dummy_n_orders(size_t n, order::oid_t start,
-                                                  order::qty_t qty)
+                                                  order::qty_t qty,
+                                                  std::string symbol)
 {
   std::vector<order::Order> result;
   result.resize(n);
@@ -22,9 +24,9 @@ std::vector<order::Order> generate_dummy_n_orders(size_t n, order::oid_t start,
   std::for_each(result.begin(), result.end(), [&](order::Order& order) {
     order.oid = count++;
     order.side = order::OrderSide::kBuy;
-    order.symbol = "IBM";
+    order.symbol = symbol;
     order.qty = qty;
-    order.price = 100.00;
+    order.price = kDefaultTestPrice;
   });
   return result;
 }
