@@ -112,6 +112,8 @@ Because of my choices, to cancel using an OID without a search I basically need 
 
 Normally, this would call for storing a pointer; however, that is not safe in STL containers that dynamically reallocate to expand (`deque`). If I used very conservatively sized, statically-allocated containers maybe this would be back on the table.
 
+**EDIT**: Upon further reading it appears that deque pointers are safe *as long as values are not erased or removed from the ends*. I believe this means I could use pointers instead of having to store Order structs. I'd be interested to measure the difference in cancel operation latency. It's also important to mention here that deques require two dereferences instead of the one required by vector to support this functionality.
+
 ## Build
 Requires CMake > 3.18.2 and a compiler supporting C++17.
 

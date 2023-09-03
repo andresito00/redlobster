@@ -59,6 +59,9 @@ target_link_libraries(test_full_fills_asc_desc PRIVATE order test_utils)
 add_executable(test_full_fills_asc_asc test/test_full_fills_asc_asc.cpp )
 target_link_libraries(test_full_fills_asc_asc PRIVATE order test_utils)
 
+add_executable(test_find_oid_after_many_pushes test/test_find_oid_after_many_pushes.cpp )
+target_link_libraries(test_find_oid_after_many_pushes PRIVATE order test_utils)
+
 enable_testing()
 add_test(NAME tests
   COMMAND "${CMAKE_CURRENT_LIST_DIR}/test.sh"

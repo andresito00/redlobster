@@ -144,6 +144,8 @@ class LevelMap
     return fifo_map_.erase(k);
   }
 
+  const auto& get_level(const Key k) const { return fifo_map_.at(k); }
+
   auto& get_first_level(const Value* order)
   {
     if (order->side == order::OrderSide::kBuy) {
