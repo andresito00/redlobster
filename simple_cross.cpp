@@ -12,6 +12,7 @@
 
 static std::unordered_set<std::string> kAllowableActionTokens{"O", "X", "P"};
 static std::unordered_set<char> kAllowableSides{'B', 'S'};
+static size_t kInvalidSubstringSize = 10LU;
 
 struct OrderAction : public Action {
   explicit OrderAction(uint32_t oid) : oid(oid) {}
@@ -75,14 +76,20 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
   std::string type;
   astream >> type;
   if (!kAllowableActionTokens.count(type)) {
-    LOG_ERROR("Invalid action: " + action_string);
+    LOG_ERROR("Invalid action: " +
+              action_string.substr(
+                  0, std::max(kInvalidSubstringSize, action_string.size())) +
+              "...");
   }
 
   if (type == "P") {
     if (action_string.size() == 1) {
       return std::make_unique<PrintAction>();
     }
-    LOG_ERROR("Invalid Print Action request size: " + action_string);
+    LOG_ERROR("Invalid Print Action request size: " +
+              action_string.substr(
+                  0, std::max(kInvalidSubstringSize, action_string.size())) +
+              "...");
     return std::make_unique<Action>();
 
   } else if (type == "O") {
@@ -116,6 +123,10 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
 
     order::price_t price;
     astream >> price;
+    if (price <= 0.0) {
+      LOG_ERROR(std::to_string(oid) + " Price <= 0 ");
+      return std::make_unique<Action>();
+    }
     return std::make_unique<PlaceOrderAction>(
         oid, symbol, order::Order{oid, symbol, side, qty, price});
 

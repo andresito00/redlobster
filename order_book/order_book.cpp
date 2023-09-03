@@ -125,9 +125,9 @@ OrderResult BookMap::handle_order(Order *order)
                        std::to_string(curr_oid) + " Duplicate order id",
                        {}};
   }
-  if (order->price == 0.0) {
+  if (order->price <= 0.0) {
     return OrderResult{ResultType::kError,
-                       std::to_string(curr_oid) + " Invalid limit price: 0",
+                       std::to_string(curr_oid) + " Invalid price, <= 0",
                        {}};
   }
   OrderResult result{};

@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.18.2)
 project(simple-cross-exe)
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTDIN") # whether to take file input from actions.txt or stdin
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTDIN") # whether to take file input from actions.txt or stdin
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG") # need symbols for gdb
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG") # need symbols for gdb
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
@@ -19,10 +20,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wsign-conversion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wnull-dereference")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wdouble-promotion")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wformat=2")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 if(CMAKE_CXX_COMPILER STREQUAL "clang++")
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wbinding-in-condition")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wduplicate-enum")
 endif()
