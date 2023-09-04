@@ -34,7 +34,7 @@ O(log(k))^2 price level lookup and erase * O(n) order fill
 ==> O(n * log(k)^2)
 ```
 
-I think the the typical complexity should be something like:
+I think the typical complexity should be something like:
 ```
 Typical:
 O(1) OID dup-check/log +
