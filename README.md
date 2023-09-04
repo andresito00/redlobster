@@ -70,7 +70,7 @@ $ ./test.sh # from the root repo directory
 
 I used [Google's style guide on C++](https://google.github.io/styleguide/cppguide.html) with a few tweaks implemented to my taste that can be seen in the .clang-format file. I tried to be consistent.
 
-CMake applies other such Google clang-tidy rules if it is installed and the the lines are uncommented in the CMakeLists.txt.
+CMake applies other such Google clang-tidy rules if it is installed and the lines are uncommented in the CMakeLists.txt.
 
 Side note: It appears Google prefers raw pointers to non-const references. I actually prefer this because it is more obvious to the reader when someone is modifying someone else's memory. I didn't see those warnings until I built on my Mac.
 
