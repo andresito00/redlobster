@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     results_t results = scross.action(line);
     for (results_t::const_iterator it = results.begin(); it != results.end();
          ++it) {
-      std::cout << *it << std::endl;
+      std::cout << *it << '\n';
     }
   }
   return 0;
