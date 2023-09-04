@@ -107,7 +107,7 @@ I wrote a script, `gen_actions.py` that streams order actions over stdin for a g
 
 where price is normally distributed about a randomly chosen mean price for each symbol.
 
-![push_back vs. emplace_back](pb_vs_eb.png)
+![push_back vs. emplace_back](./images/pb_vs_eb.jpg)
 
 My bottlenecks are in construction of Order/basic_string objects in the update_book routine to return result information.
 
