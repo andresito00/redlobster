@@ -1,6 +1,5 @@
 # A Limit Order Book
 
-## What and Why
 This implementation of a limit order book is designed to ingest a feed of actions as demonstrated by the strings present in `actions.txt`.
 
 The implementation is designed to support 3 actions:
