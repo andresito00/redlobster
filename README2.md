@@ -109,7 +109,7 @@ where price is normally distributed about a randomly chosen mean price for each 
 
 ![push_back vs. emplace_back](./images/pb_vs_eb.jpg)
 
-My bottlenecks are in construction of Order/basic_string objects in the update_book routine to return result information.
+My bottlenecks are in construction of Order/basic_string objects in the update_book routine to return result information. (if we don't count expensive string handling in the serializers, deserializers, and printing)
 
 Some next steps I would consider to resolve this:
 - Use a symbol table and symbol ID instead of encoding a string, assuming no pathological case of exploding symbol count.
