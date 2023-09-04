@@ -113,16 +113,17 @@ My bottlenecks are in construction of Order/basic_string objects in the update_b
 
 Some next steps I would consider to resolve this:
 - Use a symbol table and symbol ID instead of encoding a string, assuming no pathological case of exploding symbol count.
-- Devise a better strategy of propagating out the result information without doing so much copying, again I could consider using pointers but that comes with much more careful consideration about the underlying containers in use for the FIFOs. With pointers I expect multithreaded/future-based implementations would have to go to non-trivial efforts in synchronization to make sure that the data returned back in the `results_t` is still valid.
+- Devise a better strategy of propagating out the result information without doing so much copying. Again, I could consider using pointers but that comes with much more careful consideration about the underlying containers in use for the FIFOs. With pointers I expect multithreaded/future-based implementations would have to go to non-trivial efforts in synchronization to make sure that the data returned back in the `results_t` is still valid.
 
 ### Future Work
 On that note, think it'd be interesting to build queues of futures to handle this work, maybe something like:
-
 ```
 [hash: AAPL, MSFT ...  ] --> FIFO [place_order, place_order, place_order]
 [hash: BB, NOK, GME ...] --> FIFO [place_order, place_order, place_order]
 ```
-
 since transactions across symbols should be parallelizable.
 
-I also want to buy a Linux machine so that I can actually use perf and other microarch tools to benchmark performance, though Apple's Instruments tool is pretty cool.
+Also:
+- More tests :)
+
+I also want to buy a Linux machine so that I can actually use perf and other microarch tools to benchmark performance, though Apple's Instruments is pretty cool.
