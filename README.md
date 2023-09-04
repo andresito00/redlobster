@@ -52,7 +52,7 @@ STDIN CMakeLists.txt line you'll have to invoke like so:
 ```bash
 $ ./build/simple_crosss < actions.txt
 # OR
-$ python3 ./test/gen_actions.py SYMBOLS ACTIONS_PER_SYMBOL | ./build/simple_cross
+$ python3 ./test/gen_actions.py NUMBER_OF_SYMBOLS NUMBER_OF_ACTIONS_PER_SYMBOL | ./build/simple_cross
 ```
 
 ### How To
