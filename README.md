@@ -15,7 +15,7 @@ The implementation must flag invalid input:
 - Duplicate OIDs are an error, though I am interpreting this to mean that we only care about dups when they are on the book, after an order has been filled its OID should be available for subsequent orders.
 
 ## Build
-Requires CMake > 3.18.2 and a compiler supporting C++17.
+Requires CMake > 3.18.2 and a compiler supporting C++20.
 
 I used the ones listed below.
 
