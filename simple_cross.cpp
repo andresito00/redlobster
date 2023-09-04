@@ -29,24 +29,24 @@ struct PlaceOrderAction : public OrderAction {
   {
   }
 
-  virtual results_t handle_action(order::BookMap& books) override final
+  virtual results_t handle_action(order::BookMap* books) override final
   {
-    return books.handle_order(&order).serialize();
+    return books->handle_order(&order).serialize();
   }
 };
 
 struct CancelOrderAction : public OrderAction {
   explicit CancelOrderAction(uint32_t oid) : OrderAction(oid) {}
-  virtual results_t handle_action(order::BookMap& books) override final
+  virtual results_t handle_action(order::BookMap* books) override final
   {
-    return books.cancel_order(oid).serialize();
+    return books->cancel_order(oid).serialize();
   }
 };
 
 struct PrintAction : public Action {
-  virtual results_t handle_action(order::BookMap& books) override final
+  virtual results_t handle_action(order::BookMap* books) override final
   {
-    return books.serialize();
+    return books->serialize();
   }
 };
 
@@ -56,14 +56,14 @@ struct PrintAction : public Action {
  * X 10002
  * P
  */
-bool is_whitespace(const std::string& line)
+static inline bool is_whitespace(const std::string& line)
 {
   return std::all_of(line.cbegin(), line.cend(), [](const char& c) {
     return std::isspace(static_cast<unsigned char>(c));
   });
 }
 
-inline bool valid_symbol(const order::symbol_t& sym)
+static inline bool valid_symbol(const order::symbol_t& sym)
 {
   if (sym.size() == 0 || sym.size() > order::kMaxSymbolSize) {
     return false;
@@ -73,14 +73,15 @@ inline bool valid_symbol(const order::symbol_t& sym)
          }) == sym.end();
 }
 
-inline bool valid_qty_format(const std::string& qty_str)
+static inline bool valid_qty_format(const std::string& qty_str)
 {
   return std::find_if(qty_str.cbegin(), qty_str.cend(), [](const auto& c) {
            return !std::isdigit(c);
          }) == qty_str.end();
 }
 
-std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
+std::unique_ptr<Action> Action::deserialize(const std::string& action_string,
+                                            results_t* err)
 {
   if (action_string.size() == 0 || is_whitespace(action_string)) {
     return std::make_unique<Action>();
@@ -89,20 +90,20 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
   std::string type;
   astream >> type;
   if (!kAllowableActionTokens.count(type)) {
-    LOG_ERROR("Invalid action: " +
-              action_string.substr(
-                  0, std::max(kInvalidSubstringSize, action_string.size())) +
-              "...");
+    err->emplace_back("Invalid action: " +
+                      action_string.substr(0, std::max(kInvalidSubstringSize,
+                                                       action_string.size())) +
+                      "...");
   }
 
   if (type == "P") {
     if (action_string.size() == 1) {
       return std::make_unique<PrintAction>();
     }
-    LOG_ERROR("Invalid Print Action request size: " +
-              action_string.substr(
-                  0, std::max(kInvalidSubstringSize, action_string.size())) +
-              "...");
+    err->emplace_back("Invalid Print Action request size: " +
+                      action_string.substr(0, std::max(kInvalidSubstringSize,
+                                                       action_string.size())) +
+                      "...");
     return std::make_unique<Action>();
 
   } else if (type == "O") {
@@ -112,14 +113,14 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
     order::symbol_t symbol;
     astream >> symbol;
     if (!valid_symbol(symbol)) {
-      LOG_ERROR("Invalid Symbol: " + symbol);
+      err->emplace_back("Invalid Symbol: " + symbol);
       return std::make_unique<Action>();
     }
 
     char side_char;
     astream >> side_char;
     if (!kAllowableSides.count(side_char)) {
-      LOG_ERROR(std::to_string(oid) + " Invalid order side: " + type);
+      err->emplace_back(std::to_string(oid) + " Invalid order side: " + type);
       return std::make_unique<Action>();
     }
 
@@ -129,15 +130,15 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
     std::string qty_str;
     astream >> qty_str;
     if (!valid_qty_format(qty_str)) {
-      LOG_ERROR(
+      err->emplace_back(
           std::to_string(oid) + " Invalid quantity format: " +
           qty_str.substr(0, std::max(qty_str.size(), kInvalidSubstringSize)));
       return std::make_unique<Action>();
     }
     size_t qty = std::stoul(qty_str);
     if (qty == 0 || qty > order::kMaxQuantity) {
-      LOG_ERROR(std::to_string(oid) +
-                " Quantity out of valid range: " + std::to_string(qty));
+      err->emplace_back(std::to_string(oid) +
+                        " Quantity out of valid range: " + std::to_string(qty));
       return std::make_unique<Action>();
     }
 
@@ -145,7 +146,8 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
     astream >> price_str;
     order::price_t price = std::stod(price_str);
     if (price <= 0.0 || price > order::kMaxPrice) {
-      LOG_ERROR(std::to_string(oid) + " Price <= 0 || > 9999999.99999 ");
+      err->emplace_back(std::to_string(oid) +
+                        " Price <= 0 || > 9999999.99999 ");
       return std::make_unique<Action>();
     }
     return std::make_unique<PlaceOrderAction>(
@@ -162,6 +164,10 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
 
 results_t SimpleCross::action(const std::string& line)
 {
-  auto action = Action::deserialize(line);
-  return action->handle_action(books_);
+  results_t err;
+  auto action = Action::deserialize(line, &err);
+  if (err.size()) {
+    return err;
+  }
+  return action->handle_action(&books_);
 }

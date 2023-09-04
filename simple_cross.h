@@ -29,10 +29,11 @@ struct Action {
     SIDE: single character value with the following definitions (B - buy, S -
     sell) QTY: positive 16-bit integer value PX: positive double precision value
     (7.5 format)*/
-  static std::unique_ptr<Action> deserialize(const std::string& action_string);
+  static std::unique_ptr<Action> deserialize(const std::string& action_string,
+                                             results_t* err);
   Action() = default;
   virtual ~Action() = default;
-  virtual results_t handle_action(order::BookMap& books)
+  virtual results_t handle_action(order::BookMap* books)
   {
     (void)books;
     return {};
