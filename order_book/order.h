@@ -25,6 +25,7 @@ const extern qty_t kMaxQuantity;
 const extern oid_t kMaxOID;
 const extern fifo_idx_t kMaxDQIdx;
 const extern size_t kMaxSymbolSize;
+const extern order::price_t kMaxPrice;
 
 struct Order {
   oid_t oid;

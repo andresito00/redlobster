@@ -24,7 +24,7 @@ QTY_MAX = 0x10000 - 1
 
 def create_action(symbol: str, price: float) -> str:
     ask_or_offer: str = random.choice(["B", "S"])
-    qty: int = np.random.randint(0, QTY_MAX)
+    qty: int = np.random.randint(1, QTY_MAX)
     return f"O {avo.get()} {symbol} {ask_or_offer} {qty} {price:7.5f}"
 
 

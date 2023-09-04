@@ -11,6 +11,7 @@ constexpr qty_t kMaxQuantity = std::numeric_limits<order::qty_t>::max();
 constexpr oid_t kMaxOID = std::numeric_limits<oid_t>::max();
 constexpr fifo_idx_t kMaxDQIdx = std::numeric_limits<fifo_idx_t>::max();
 constexpr size_t kMaxSymbolSize = 8;
+constexpr order::price_t kMaxPrice = 9999999.99999;
 
 Order::Order()
     : oid(kMaxOID), side(OrderSide::kBuy), qty(0), price(0.0), idx(kMaxDQIdx)

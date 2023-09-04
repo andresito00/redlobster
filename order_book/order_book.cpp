@@ -114,7 +114,8 @@ void OrderBook::kill_order(const Order &reference_order_data)
 
 /**
  * handle_order dispatches an inbound order
- * Returns a kError
+ * Returns a kError if the price is bad or the oid is already
+ * in flight.
 */
 OrderResult BookMap::handle_order(Order *order)
 {
@@ -125,7 +126,7 @@ OrderResult BookMap::handle_order(Order *order)
                        std::to_string(curr_oid) + " Duplicate order id",
                        {}};
   }
-  if (order->price <= 0.0) {
+  if (order->price <= 0.0 || order->price > order::kMaxPrice) {
     return OrderResult{ResultType::kError,
                        std::to_string(curr_oid) + " Invalid price, <= 0",
                        {}};

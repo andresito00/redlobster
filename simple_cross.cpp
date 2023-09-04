@@ -14,7 +14,6 @@
 static std::unordered_set<std::string> kAllowableActionTokens{"O", "X", "P"};
 static std::unordered_set<char> kAllowableSides{'B', 'S'};
 static size_t kInvalidSubstringSize = 10LU;
-static order::price_t kMaxPrice = 9999999.99999;
 
 struct OrderAction : public Action {
   explicit OrderAction(uint32_t oid) : oid(oid) {}
@@ -24,10 +23,12 @@ struct OrderAction : public Action {
 struct PlaceOrderAction : public OrderAction {
   order::symbol_t symbol;
   order::Order order;
+
   PlaceOrderAction(uint32_t oid, order::symbol_t symbol, order::Order order)
       : OrderAction(oid), symbol(symbol), order(order)
   {
   }
+
   virtual results_t handle_action(order::BookMap& books) override final
   {
     return books.handle_order(&order).serialize();
@@ -143,7 +144,7 @@ std::unique_ptr<Action> Action::deserialize(const std::string& action_string)
     std::string price_str;
     astream >> price_str;
     order::price_t price = std::stod(price_str);
-    if (price <= 0.0 || price > kMaxPrice) {
+    if (price <= 0.0 || price > order::kMaxPrice) {
       LOG_ERROR(std::to_string(oid) + " Price <= 0 || > 9999999.99999 ");
       return std::make_unique<Action>();
     }
