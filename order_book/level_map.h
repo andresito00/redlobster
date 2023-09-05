@@ -8,7 +8,7 @@
 
 namespace levelmap
 {
-#ifdef __linux__
+#ifdef __linux__ // TODO(andres): Use __has_feature instead, if possible.
 template <typename T>
 concept arithmetic = std::integral<T> || std::floating_point<T>;
 template <arithmetic Key, typename Value,
